@@ -138,8 +138,8 @@ ${cartItems.map(item => {
 💰 TOTAL: ₱${totalPrice}
 
 💳 Payment: ${selectedPaymentMethod?.name || paymentMethod}
+
 📸 Payment Receipt: ${receiptImageUrl}
-Please also attach the screenshot in Messenger for verification.
 
 Please confirm this order to proceed. Thank you for choosing AmberKin! 🎮
     `.trim();
