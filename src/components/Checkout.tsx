@@ -328,16 +328,24 @@ Please confirm this order to proceed. Thank you for choosing AmberKin! 🎮
   }, []);
 
   const handleDownloadQRCode = async (qrCodeUrl: string, paymentMethodName: string) => {
-    // Prevent default navigation if download doesn't work
+    // Only disable in Messenger's in-app browser
+    // All external browsers (Chrome, Safari, Firefox, Edge, etc.) should work
     if (isMessengerBrowser) {
       // In Messenger, downloads don't work - users can long-press the QR code image
       return;
     }
     
-    // For regular browsers, fetch and download as blob to force download
+    // For all external browsers, fetch and download as blob to force download
+    // This approach works in Chrome, Safari, Firefox, Edge, Opera, and other modern browsers
     try {
-      const response = await fetch(qrCodeUrl);
-      if (!response.ok) throw new Error('Failed to fetch image');
+      const response = await fetch(qrCodeUrl, {
+        mode: 'cors',
+        cache: 'no-cache'
+      });
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
       
       const blob = await response.blob();
       const url = window.URL.createObjectURL(blob);
@@ -345,21 +353,32 @@ Please confirm this order to proceed. Thank you for choosing AmberKin! 🎮
       link.href = url;
       link.download = `qr-code-${paymentMethodName.toLowerCase().replace(/\s+/g, '-')}.png`;
       link.style.display = 'none';
+      
+      // Append to body, click, then remove
       document.body.appendChild(link);
       link.click();
-      document.body.removeChild(link);
-      window.URL.revokeObjectURL(url);
+      
+      // Clean up
+      setTimeout(() => {
+        document.body.removeChild(link);
+        window.URL.revokeObjectURL(url);
+      }, 100);
     } catch (error) {
       console.error('Download failed:', error);
-      // Fallback: try direct link (might open instead of download)
+      // Fallback: try direct link with download attribute
+      // This works in most browsers but may open instead of download in some cases
       try {
         const link = document.createElement('a');
         link.href = qrCodeUrl;
         link.download = `qr-code-${paymentMethodName.toLowerCase().replace(/\s+/g, '-')}.png`;
+        link.target = '_blank';
+        link.rel = 'noopener noreferrer';
         link.style.display = 'none';
         document.body.appendChild(link);
         link.click();
-        document.body.removeChild(link);
+        setTimeout(() => {
+          document.body.removeChild(link);
+        }, 100);
       } catch (fallbackError) {
         console.error('Fallback download also failed:', fallbackError);
       }
