@@ -27,16 +27,25 @@ const Checkout: React.FC<CheckoutProps> = ({ cartItems, totalPrice, onBack }) =>
   const [bulkInputValues, setBulkInputValues] = useState<Record<string, string>>({});
   const [bulkSelectedGames, setBulkSelectedGames] = useState<string[]>([]);
 
+  // Extract original menu item ID from cart item ID (format: "menuItemId:::CART:::timestamp-random")
+  // This allows us to group all packages from the same game together
+  const getOriginalMenuItemId = (cartItemId: string): string => {
+    const parts = cartItemId.split(':::CART:::');
+    return parts.length > 1 ? parts[0] : cartItemId;
+  };
+
   // Group custom fields by item/game
   // If any game has custom fields, show those grouped by game. Otherwise, show default "IGN" field
-  // Deduplicate by item ID to avoid showing the same fields multiple times for the same item
+  // Deduplicate by original menu item ID to avoid showing the same fields multiple times for the same game
+  // (even if different packages/variations are selected)
   const itemsWithCustomFields = useMemo(() => {
     const itemsWithFields = cartItems.filter(item => item.customFields && item.customFields.length > 0);
-    // Deduplicate by item ID
+    // Deduplicate by original menu item ID
     const uniqueItems = new Map<string, typeof cartItems[0]>();
     itemsWithFields.forEach(item => {
-      if (!uniqueItems.has(item.id)) {
-        uniqueItems.set(item.id, item);
+      const originalId = getOriginalMenuItemId(item.id);
+      if (!uniqueItems.has(originalId)) {
+        uniqueItems.set(originalId, item);
       }
     });
     return Array.from(uniqueItems.values());
@@ -49,9 +58,9 @@ const Checkout: React.FC<CheckoutProps> = ({ cartItems, totalPrice, onBack }) =>
   const bulkInputFields = useMemo(() => {
     if (bulkSelectedGames.length === 0) return [];
     
-    // Get all selected items
+    // Get all selected items (bulkSelectedGames contains original menu item IDs)
     const selectedItems = itemsWithCustomFields.filter(item => 
-      bulkSelectedGames.includes(item.id)
+      bulkSelectedGames.includes(getOriginalMenuItemId(item.id))
     );
     
     if (selectedItems.length === 0) return [];
@@ -81,9 +90,9 @@ const Checkout: React.FC<CheckoutProps> = ({ cartItems, totalPrice, onBack }) =>
     
     const updates: Record<string, string> = {};
     
-    // Get selected items
+    // Get selected items (bulkSelectedGames contains original menu item IDs)
     const selectedItems = itemsWithCustomFields.filter(item => 
-      bulkSelectedGames.includes(item.id)
+      bulkSelectedGames.includes(getOriginalMenuItemId(item.id))
     );
     
     // For each bulk input field (by index)
@@ -94,7 +103,8 @@ const Checkout: React.FC<CheckoutProps> = ({ cartItems, totalPrice, onBack }) =>
       selectedItems.forEach(item => {
         if (item.customFields && item.customFields[fieldIndex]) {
           const field = item.customFields[fieldIndex];
-          const valueKey = `${item.id}_${field.key}`;
+          const originalId = getOriginalMenuItemId(item.id);
+          const valueKey = `${originalId}_${field.key}`;
           updates[valueKey] = value;
         }
       });
@@ -157,10 +167,12 @@ const Checkout: React.FC<CheckoutProps> = ({ cartItems, totalPrice, onBack }) =>
   };
 
   const handleBulkGameSelectionChange = (itemId: string, checked: boolean) => {
+    // itemId is the cart item ID, convert to original menu item ID
+    const originalId = getOriginalMenuItemId(itemId);
     if (checked) {
-      setBulkSelectedGames(prev => [...prev, itemId]);
+      setBulkSelectedGames(prev => [...prev, originalId]);
     } else {
-      setBulkSelectedGames(prev => prev.filter(id => id !== itemId));
+      setBulkSelectedGames(prev => prev.filter(id => id !== originalId));
     }
   };
 
@@ -207,9 +219,10 @@ const Checkout: React.FC<CheckoutProps> = ({ cartItems, totalPrice, onBack }) =>
       const gamesByFieldValues = new Map<string, { games: string[], fields: Array<{ label: string, value: string }> }>();
       
       itemsWithCustomFields.forEach(item => {
-        // Get all field values for this game
+        // Get all field values for this game (use original menu item ID)
+        const originalId = getOriginalMenuItemId(item.id);
         const fields = item.customFields?.map(field => {
-          const valueKey = `${item.id}_${field.key}`;
+          const valueKey = `${originalId}_${field.key}`;
           const value = customFieldValues[valueKey] || '';
           return value ? { label: field.label, value } : null;
         }).filter(Boolean) as Array<{ label: string, value: string }> || [];
@@ -319,12 +332,13 @@ Please confirm this order to proceed. Thank you for choosing AmberKin! 🎮
       return customFieldValues['default_ign']?.trim() || false;
     }
     
-    // Check all required fields for all items
+    // Check all required fields for all items (use original menu item ID)
     return itemsWithCustomFields.every(item => {
       if (!item.customFields) return true;
+      const originalId = getOriginalMenuItemId(item.id);
       return item.customFields.every(field => {
         if (!field.required) return true;
-        const valueKey = `${item.id}_${field.key}`;
+        const valueKey = `${originalId}_${field.key}`;
         return customFieldValues[valueKey]?.trim() || false;
       });
     });
@@ -370,7 +384,8 @@ Please confirm this order to proceed. Thank you for choosing AmberKin! 🎮
                   {/* Game Selection Checkboxes */}
                   <div className="space-y-2 mb-4">
                     {itemsWithCustomFields.map((item) => {
-                      const isSelected = bulkSelectedGames.includes(item.id);
+                      const originalId = getOriginalMenuItemId(item.id);
+                      const isSelected = bulkSelectedGames.includes(originalId);
                       return (
                         <label
                           key={item.id}
@@ -419,7 +434,8 @@ Please confirm this order to proceed. Thank you for choosing AmberKin! 🎮
                       <p className="text-sm text-cafe-textMuted">Please provide the following information for this game</p>
                     </div>
                     {item.customFields?.map((field) => {
-                      const valueKey = `${item.id}_${field.key}`;
+                      const originalId = getOriginalMenuItemId(item.id);
+                      const valueKey = `${originalId}_${field.key}`;
                       return (
                         <div key={valueKey}>
                           <label className="block text-sm font-medium text-cafe-text mb-2">
@@ -539,15 +555,19 @@ Please confirm this order to proceed. Thank you for choosing AmberKin! 🎮
                 onClick={() => {
                   setPaymentMethod(method.id as PaymentMethod);
                 }}
-                className={`p-4 rounded-lg border-2 transition-all duration-200 flex flex-col items-center justify-center space-y-2 ${
+                className={`p-2 rounded-xl border-2 transition-all duration-200 flex flex-row items-center gap-2 ${
                   paymentMethod === method.id
                     ? 'border-transparent text-white'
                     : 'glass border-cafe-primary/30 text-cafe-text hover:border-cafe-primary hover:glass-strong'
                 }`}
                 style={paymentMethod === method.id ? { backgroundColor: '#1E7ACB' } : {}}
               >
-                <span className="text-2xl">💳</span>
-                <span className="font-medium text-sm text-center">{method.name}</span>
+                {/* Icon on Left */}
+                <div className="relative w-14 h-14 sm:w-16 sm:h-16 flex-shrink-0 rounded-lg overflow-hidden bg-gradient-to-br from-cafe-darkCard to-cafe-darkBg flex items-center justify-center">
+                  <span className="text-2xl">💳</span>
+                </div>
+                {/* Text on Right */}
+                <span className="font-medium text-sm flex-1 text-left">{method.name}</span>
               </button>
             ))}
           </div>
@@ -599,8 +619,9 @@ Please confirm this order to proceed. Thank you for choosing AmberKin! 🎮
               <h4 className="font-medium text-cafe-text mb-2">Customer Details</h4>
               {hasAnyCustomFields ? (
                 itemsWithCustomFields.map((item) => {
+                  const originalId = getOriginalMenuItemId(item.id);
                   const fields = item.customFields?.map(field => {
-                    const valueKey = `${item.id}_${field.key}`;
+                    const valueKey = `${originalId}_${field.key}`;
                     const value = customFieldValues[valueKey];
                     return value ? (
                       <p key={valueKey} className="text-sm text-cafe-textMuted">
