@@ -78,7 +78,6 @@ const SiteSettingsManager: React.FC = () => {
       // Update all settings
       await updateSiteSettings({
         site_name: formData.site_name,
-        site_description: formData.site_description,
         currency: formData.currency,
         currency_code: formData.currency_code,
         site_logo: logoUrl
@@ -305,25 +304,6 @@ const SiteSettingsManager: React.FC = () => {
             />
           ) : (
             <p className="text-lg font-medium text-black">{siteSettings?.site_name}</p>
-          )}
-        </div>
-
-        {/* Site Description */}
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Site Description
-          </label>
-          {isEditing ? (
-            <textarea
-              name="site_description"
-              value={formData.site_description}
-              onChange={handleInputChange}
-              rows={3}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500"
-              placeholder="Enter site description"
-            />
-          ) : (
-            <p className="text-gray-600">{siteSettings?.site_description}</p>
           )}
         </div>
 

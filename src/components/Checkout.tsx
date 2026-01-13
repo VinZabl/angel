@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useRef } from 'react';
-import { ArrowLeft, Upload, X, Copy, Check, MousePointerClick, ChevronUp, Download } from 'lucide-react';
+import { ArrowLeft, Upload, X, Copy, Check, ChevronUp, Download } from 'lucide-react';
 import { CartItem, PaymentMethod, CustomField } from '../types';
 import { usePaymentMethods } from '../hooks/usePaymentMethods';
 import { useImageUpload } from '../hooks/useImageUpload';
@@ -274,7 +274,7 @@ const Checkout: React.FC<CheckoutProps> = ({ cartItems, totalPrice, onBack }) =>
     }
 
     const orderDetails = `
-🛒 AmberKin ORDER
+🛒 hatredtopup ORDER
 
 ${customFieldsSection}
 
@@ -294,7 +294,7 @@ ${cartItems.map(item => {
 
 📸 Payment Receipt: ${receiptImageUrl || ''}
 
-Please confirm this order to proceed. Thank you for choosing AmberKin! 🎮
+Please confirm this order to proceed. Thank you for choosing hatredtopup! 🎮
     `.trim();
 
     return orderDetails;
