@@ -624,27 +624,48 @@ const Checkout: React.FC<CheckoutProps> = ({ cartItems, totalPrice, onBack, onNa
 
   const handleCopyMessage = async () => {
     try {
-      // Force generate a new invoice number when Copy is clicked
-      // This locks in the invoice number for this order
-      const message = await generateOrderMessage(true);
+      // Detect iOS - use execCommand directly for better compatibility
+      const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || 
+                    (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
       
-      // Try modern clipboard API first
-      try {
-        await navigator.clipboard.writeText(message);
-        setCopied(true);
-        setHasCopiedMessage(true);
-        setTimeout(() => setCopied(false), 2000);
-      } catch (clipboardError) {
-        // Fallback for iOS and older browsers
+      // For iOS, we need to copy synchronously within user gesture
+      // So we generate message first, then copy immediately
+      let message: string;
+      
+      if (isIOS) {
+        // On iOS, generate message synchronously using optimistic invoice number
+        // Then copy immediately, then update database in background
+        const today = new Date();
+        const todayStr = today.toISOString().split('T')[0];
+        const dayOfMonth = today.getDate();
+        
+        // Optimistically increment invoice number
+        let optimisticCount = 1;
+        if (generatedInvoiceNumber && invoiceNumberDate === todayStr) {
+          // Extract current count from existing invoice number
+          const match = generatedInvoiceNumber.match(/1M\d+D(\d+)/);
+          if (match) {
+            optimisticCount = parseInt(match[1], 10) + 1;
+          }
+        }
+        
+        const optimisticInvoiceNumber = `1M${dayOfMonth}D${optimisticCount}`;
+        
+        // Generate message synchronously (without database calls)
+        message = await generateOrderMessageSync(optimisticInvoiceNumber);
+        
+        // Copy immediately (synchronously)
         const textarea = document.createElement('textarea');
         textarea.value = message;
         textarea.style.position = 'fixed';
-        textarea.style.left = '-999999px';
-        textarea.style.top = '-999999px';
+        textarea.style.left = '0';
+        textarea.style.top = '0';
+        textarea.style.opacity = '0';
+        textarea.style.pointerEvents = 'none';
+        textarea.setAttribute('readonly', '');
         document.body.appendChild(textarea);
-        textarea.focus();
         textarea.select();
-        
+        textarea.setSelectionRange(0, message.length);
         const successful = document.execCommand('copy');
         document.body.removeChild(textarea);
         
@@ -652,36 +673,302 @@ const Checkout: React.FC<CheckoutProps> = ({ cartItems, totalPrice, onBack, onNa
           setCopied(true);
           setHasCopiedMessage(true);
           setTimeout(() => setCopied(false), 2000);
+          
+          // Update database in background (async, doesn't block)
+          generateInvoiceNumber(true).then((actualInvoiceNumber) => {
+            // Regenerate message with actual invoice number and update state
+            generateOrderMessage(false).then((actualMessage) => {
+              // Message is already copied, just update state
+              setGeneratedInvoiceNumber(actualInvoiceNumber);
+            }).catch(console.error);
+          }).catch(console.error);
         } else {
-          console.error('Failed to copy message');
+          console.error('Failed to copy message on iOS');
+        }
+      } else {
+        // For non-iOS, use async approach
+        message = await generateOrderMessage(true);
+        
+        try {
+          await navigator.clipboard.writeText(message);
+          setCopied(true);
+          setHasCopiedMessage(true);
+          setTimeout(() => setCopied(false), 2000);
+        } catch (clipboardError) {
+          // Fallback for older browsers
+          const textarea = document.createElement('textarea');
+          textarea.value = message;
+          textarea.style.position = 'fixed';
+          textarea.style.left = '-999999px';
+          textarea.style.top = '-999999px';
+          document.body.appendChild(textarea);
+          textarea.focus();
+          textarea.select();
+          
+          const successful = document.execCommand('copy');
+          document.body.removeChild(textarea);
+          
+          if (successful) {
+            setCopied(true);
+            setHasCopiedMessage(true);
+            setTimeout(() => setCopied(false), 2000);
+          } else {
+            console.error('Failed to copy message');
+          }
         }
       }
     } catch (error) {
       console.error('Failed to copy message:', error);
     }
   };
+  
+  // Synchronous version of generateOrderMessage that uses a provided invoice number
+  const generateOrderMessageSync = async (invoiceNumber: string): Promise<string> => {
+    // Build message lines (same logic as generateOrderMessage but without invoice generation)
+    const lines: string[] = [];
+    
+    // Invoice number
+    lines.push(`INVOICE # ${invoiceNumber}`);
+    lines.push(''); // Break after invoice
+    
+    // Handle multiple accounts mode
+    if (useMultipleAccounts && canUseMultipleAccounts) {
+      // Group by game and variation
+      const gameGroups = new Map<string, Array<{ variationName: string; items: CartItem[]; fields: Array<{ label: string, value: string }> }>>();
+      
+      itemsByGameAndVariation.forEach(({ gameId, gameName, variationId, variationName, items }) => {
+        const firstItem = items[0];
+        if (!firstItem.customFields) return;
+        
+        const fields = firstItem.customFields.map(field => {
+          const valueKey = `${gameId}_${variationId}_${field.key}`;
+          const value = customFieldValues[valueKey] || '';
+          return value ? { label: field.label, value } : null;
+        }).filter(Boolean) as Array<{ label: string, value: string }>;
+        
+        if (fields.length === 0) return;
+        
+        if (!gameGroups.has(gameName)) {
+          gameGroups.set(gameName, []);
+        }
+        gameGroups.get(gameName)!.push({ variationName, items, fields });
+      });
+      
+      // Build message for each game (game name mentioned once)
+      gameGroups.forEach((variations, gameName) => {
+        lines.push(`GAME: ${gameName}`);
+        
+        variations.forEach(({ variationName, items, fields }) => {
+          // ID & SERVER or other fields
+          if (fields.length === 1) {
+            lines.push(`${fields[0].label}: ${fields[0].value}`);
+          } else if (fields.length > 1) {
+            // Combine fields with & if multiple
+            const allValuesSame = fields.every(f => f.value === fields[0].value);
+            if (allValuesSame) {
+              const labels = fields.map(f => f.label);
+              if (labels.length === 2) {
+                lines.push(`${labels[0]} & ${labels[1]}: ${fields[0].value}`);
+              } else {
+                const allButLast = labels.slice(0, -1).join(', ');
+                const lastLabel = labels[labels.length - 1];
+                lines.push(`${allButLast} & ${lastLabel}: ${fields[0].value}`);
+              }
+            } else {
+              // Different values, show each field separately
+              fields.forEach(field => {
+                lines.push(`${field.label}: ${field.value}`);
+              });
+            }
+          }
+          
+          // Order items for this variation
+          items.forEach(item => {
+            const variationText = item.selectedVariation ? ` ${item.selectedVariation.name}` : '';
+            const addOnsText = item.selectedAddOns && item.selectedAddOns.length > 0
+              ? ` + ${item.selectedAddOns.map(a => a.name).join(', ')}`
+              : '';
+            lines.push(`ORDER: ${item.name}${variationText}${addOnsText} x${item.quantity} - ₱${item.totalPrice * item.quantity}`);
+          });
+        });
+      });
+    } else if (hasAnyCustomFields) {
+      // Build game/order sections (single account or bulk mode)
+      // Group games by their field values (for bulk input)
+      const gamesByFieldValues = new Map<string, { games: string[], items: CartItem[], fields: Array<{ label: string, value: string }> }>();
+      const itemsWithoutFields: CartItem[] = [];
+      
+      cartItems.forEach(cartItem => {
+        const originalId = getOriginalMenuItemId(cartItem.id);
+        const item = itemsWithCustomFields.find(i => getOriginalMenuItemId(i.id) === originalId);
+        
+        if (!item || !item.customFields || item.customFields.length === 0) {
+          // Item without custom fields, handle separately
+          itemsWithoutFields.push(cartItem);
+          return;
+        }
+        
+        const fields = item.customFields.map(field => {
+          const valueKey = `${originalId}_${field.key}`;
+          const value = customFieldValues[valueKey] || '';
+          return value ? { label: field.label, value } : null;
+        }).filter(Boolean) as Array<{ label: string, value: string }> || [];
+        
+        if (fields.length === 0) {
+          // No field values, treat as item without fields
+          itemsWithoutFields.push(cartItem);
+          return;
+        }
+        
+        // Create a key based on field values (to group games with same values)
+        const valueKey = fields.map(f => `${f.label}:${f.value}`).join('|');
+        
+        if (!gamesByFieldValues.has(valueKey)) {
+          gamesByFieldValues.set(valueKey, { games: [], items: [], fields });
+        }
+        const group = gamesByFieldValues.get(valueKey)!;
+        if (!group.games.includes(item.name)) {
+          group.games.push(item.name);
+        }
+        group.items.push(cartItem);
+        group.fields = fields; // Use the fields from this item
+      });
+      
+      // Build sections for each group
+      gamesByFieldValues.forEach(({ games, items, fields }) => {
+        // Game name (only once if multiple games share same fields)
+        lines.push(`GAME: ${games.join(', ')}`);
+        
+        // ID & SERVER or other fields
+        if (fields.length === 1) {
+          lines.push(`${fields[0].label}: ${fields[0].value}`);
+        } else if (fields.length > 1) {
+          // Combine fields with & if multiple
+          const allValuesSame = fields.every(f => f.value === fields[0].value);
+          if (allValuesSame) {
+            // All values same, combine labels with &
+            const labels = fields.map(f => f.label);
+            if (labels.length === 2) {
+              lines.push(`${labels[0]} & ${labels[1]}: ${fields[0].value}`);
+            } else {
+              const allButLast = labels.slice(0, -1).join(', ');
+              const lastLabel = labels[labels.length - 1];
+              lines.push(`${allButLast} & ${lastLabel}: ${fields[0].value}`);
+            }
+          } else {
+            // Different values, show each field separately
+            const fieldPairs = fields.map(f => `${f.label}: ${f.value}`);
+            lines.push(fieldPairs.join(', '));
+          }
+        }
+        
+        // Order items
+        items.forEach(item => {
+          let orderLine = `ORDER: ${item.selectedVariation?.name || item.name}`;
+          if (item.quantity > 1) {
+            orderLine += ` x${item.quantity}`;
+          }
+          orderLine += ` - ₱${item.totalPrice * item.quantity}`;
+          lines.push(orderLine);
+        });
+      });
+      
+      // Handle items without custom fields
+      if (itemsWithoutFields.length > 0) {
+        const uniqueGames = [...new Set(itemsWithoutFields.map(item => item.name))];
+        lines.push(`GAME: ${uniqueGames.join(', ')}`);
+        
+        itemsWithoutFields.forEach(item => {
+          let orderLine = `ORDER: ${item.selectedVariation?.name || item.name}`;
+          if (item.quantity > 1) {
+            orderLine += ` x${item.quantity}`;
+          }
+          orderLine += ` - ₱${item.totalPrice * item.quantity}`;
+          lines.push(orderLine);
+        });
+      }
+    } else {
+      // No custom fields, single account mode
+      const uniqueGames = [...new Set(cartItems.map(item => item.name))];
+      lines.push(`GAME: ${uniqueGames.join(', ')}`);
+      
+      // Default IGN field
+      const ign = customFieldValues['default_ign'] || '';
+      if (ign) {
+        lines.push(`IGN: ${ign}`);
+      }
+      
+      // Order items
+      cartItems.forEach(item => {
+        let orderLine = `ORDER: ${item.selectedVariation?.name || item.name}`;
+        if (item.quantity > 1) {
+          orderLine += ` x${item.quantity}`;
+        }
+        orderLine += ` - ₱${item.totalPrice * item.quantity}`;
+        lines.push(orderLine);
+      });
+    }
+    
+    // Payment
+    const paymentLine = `PAYMENT: ${selectedPaymentMethod?.name || ''}${selectedPaymentMethod?.account_name ? ` - ${selectedPaymentMethod.account_name}` : ''}`;
+    lines.push(paymentLine);
+    
+    // Total
+    lines.push(`TOTAL: ₱${totalPrice}`);
+    lines.push(''); // Break before payment receipt
+    
+    // Payment Receipt
+    lines.push('PAYMENT RECEIPT:');
+    if (receiptImageUrl) {
+      lines.push(receiptImageUrl);
+    }
+    
+    return lines.join('\n');
+  };
 
   const handleCopyAccountNumber = async (accountNumber: string) => {
     try {
-      try {
-        await navigator.clipboard.writeText(accountNumber);
-        setCopiedAccountNumber(true);
-        setTimeout(() => setCopiedAccountNumber(false), 2000);
-      } catch (clipboardError) {
-        // Fallback for iOS
+      const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || 
+                    (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+      
+      if (isIOS) {
         const textarea = document.createElement('textarea');
         textarea.value = accountNumber;
         textarea.style.position = 'fixed';
-        textarea.style.left = '-999999px';
-        textarea.style.top = '-999999px';
+        textarea.style.left = '0';
+        textarea.style.top = '0';
+        textarea.style.opacity = '0';
+        textarea.style.pointerEvents = 'none';
+        textarea.setAttribute('readonly', '');
         document.body.appendChild(textarea);
-        textarea.focus();
         textarea.select();
+        textarea.setSelectionRange(0, accountNumber.length);
         const successful = document.execCommand('copy');
         document.body.removeChild(textarea);
         if (successful) {
           setCopiedAccountNumber(true);
           setTimeout(() => setCopiedAccountNumber(false), 2000);
+        }
+      } else {
+        try {
+          await navigator.clipboard.writeText(accountNumber);
+          setCopiedAccountNumber(true);
+          setTimeout(() => setCopiedAccountNumber(false), 2000);
+        } catch (clipboardError) {
+          const textarea = document.createElement('textarea');
+          textarea.value = accountNumber;
+          textarea.style.position = 'fixed';
+          textarea.style.left = '-999999px';
+          textarea.style.top = '-999999px';
+          document.body.appendChild(textarea);
+          textarea.focus();
+          textarea.select();
+          const successful = document.execCommand('copy');
+          document.body.removeChild(textarea);
+          if (successful) {
+            setCopiedAccountNumber(true);
+            setTimeout(() => setCopiedAccountNumber(false), 2000);
+          }
         }
       }
     } catch (error) {
@@ -691,25 +978,47 @@ const Checkout: React.FC<CheckoutProps> = ({ cartItems, totalPrice, onBack, onNa
 
   const handleCopyAccountName = async (accountName: string) => {
     try {
-      try {
-        await navigator.clipboard.writeText(accountName);
-        setCopiedAccountName(true);
-        setTimeout(() => setCopiedAccountName(false), 2000);
-      } catch (clipboardError) {
-        // Fallback for iOS
+      const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || 
+                    (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+      
+      if (isIOS) {
         const textarea = document.createElement('textarea');
         textarea.value = accountName;
         textarea.style.position = 'fixed';
-        textarea.style.left = '-999999px';
-        textarea.style.top = '-999999px';
+        textarea.style.left = '0';
+        textarea.style.top = '0';
+        textarea.style.opacity = '0';
+        textarea.style.pointerEvents = 'none';
+        textarea.setAttribute('readonly', '');
         document.body.appendChild(textarea);
-        textarea.focus();
         textarea.select();
+        textarea.setSelectionRange(0, accountName.length);
         const successful = document.execCommand('copy');
         document.body.removeChild(textarea);
         if (successful) {
           setCopiedAccountName(true);
           setTimeout(() => setCopiedAccountName(false), 2000);
+        }
+      } else {
+        try {
+          await navigator.clipboard.writeText(accountName);
+          setCopiedAccountName(true);
+          setTimeout(() => setCopiedAccountName(false), 2000);
+        } catch (clipboardError) {
+          const textarea = document.createElement('textarea');
+          textarea.value = accountName;
+          textarea.style.position = 'fixed';
+          textarea.style.left = '-999999px';
+          textarea.style.top = '-999999px';
+          document.body.appendChild(textarea);
+          textarea.focus();
+          textarea.select();
+          const successful = document.execCommand('copy');
+          document.body.removeChild(textarea);
+          if (successful) {
+            setCopiedAccountName(true);
+            setTimeout(() => setCopiedAccountName(false), 2000);
+          }
         }
       }
     } catch (error) {
