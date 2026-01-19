@@ -5,6 +5,7 @@ import { usePaymentMethods } from '../hooks/usePaymentMethods';
 import { useImageUpload } from '../hooks/useImageUpload';
 import { useOrders } from '../hooks/useOrders';
 import { useSiteSettings } from '../hooks/useSiteSettings';
+import { useMemberAuth } from '../hooks/useMemberAuth';
 import { supabase } from '../lib/supabase';
 import OrderStatusModal from './OrderStatusModal';
 
@@ -20,6 +21,7 @@ const Checkout: React.FC<CheckoutProps> = ({ cartItems, totalPrice, onBack, onNa
   const { uploadImage, uploading: uploadingReceipt } = useImageUpload();
   const { createOrder } = useOrders();
   const { siteSettings } = useSiteSettings();
+  const { currentMember } = useMemberAuth();
   const orderOption = siteSettings?.order_option || 'order_via_messenger';
   const [step, setStep] = useState<'details' | 'payment' | 'summary'>('details');
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod | null>(null);
@@ -395,9 +397,9 @@ const Checkout: React.FC<CheckoutProps> = ({ cartItems, totalPrice, onBack, onNa
       const orderNumber = currentCount;
 
       // Format: 1M{day}D{orderNumber}
-      // Example: 1M17D1 (1st order on day 17), 1M17D2 (2nd order on day 17), etc.
+      // Example: AKGXT1M17D1 (1st order on day 17), AKGXT1M17D2 (2nd order on day 17), etc.
       // The first number is always 1, the last number is the order number
-      const invoiceNumber = `1M${dayOfMonth}D${orderNumber}`;
+      const invoiceNumber = `AKGXT1M${dayOfMonth}D${orderNumber}`;
       
       // Store the generated invoice number and date
       setGeneratedInvoiceNumber(invoiceNumber);
@@ -622,8 +624,41 @@ const Checkout: React.FC<CheckoutProps> = ({ cartItems, totalPrice, onBack, onNa
     return lines.join('\n');
   };
 
+  const isSavingOrder = useRef(false);
+
+  const saveOrderToDb = async () => {
+    if (orderId || isSavingOrder.current) return orderId;
+    
+    try {
+      isSavingOrder.current = true;
+      const customerInfo = getCustomerInfo();
+      const newOrder = await createOrder({
+        order_items: cartItems,
+        customer_info: customerInfo as Record<string, string> | Array<{ game: string; package: string; fields: Record<string, string> }>,
+        payment_method_id: paymentMethod!,
+        receipt_url: receiptImageUrl!,
+        total_price: totalPrice,
+        member_id: currentMember?.id,
+        order_option: orderOption,
+      });
+      
+      if (newOrder) {
+        setOrderId(newOrder.id);
+        return newOrder.id;
+      }
+    } catch (error) {
+      console.error('Error saving order to database:', error);
+    } finally {
+      isSavingOrder.current = false;
+    }
+    return null;
+  };
+
   const handleCopyMessage = async () => {
     try {
+      // Save order to database if not already saved
+      saveOrderToDb();
+
       // Detect iOS - use execCommand directly for better compatibility
       const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || 
                     (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
@@ -643,13 +678,13 @@ const Checkout: React.FC<CheckoutProps> = ({ cartItems, totalPrice, onBack, onNa
         let optimisticCount = 1;
         if (generatedInvoiceNumber && invoiceNumberDate === todayStr) {
           // Extract current count from existing invoice number
-          const match = generatedInvoiceNumber.match(/1M\d+D(\d+)/);
+          const match = generatedInvoiceNumber.match(/AKGXT1M\d+D(\d+)/);
           if (match) {
             optimisticCount = parseInt(match[1], 10) + 1;
           }
         }
         
-        const optimisticInvoiceNumber = `1M${dayOfMonth}D${optimisticCount}`;
+        const optimisticInvoiceNumber = `AKGXT1M${dayOfMonth}D${optimisticCount}`;
         
         // Generate message synchronously (without database calls)
         message = await generateOrderMessageSync(optimisticInvoiceNumber);
@@ -1091,6 +1126,69 @@ const Checkout: React.FC<CheckoutProps> = ({ cartItems, totalPrice, onBack, onNa
     }
   };
 
+  const getCustomerInfo = () => {
+    let customerInfo: Record<string, string> | Array<{ game: string; package: string; fields: Record<string, string> }>;
+    
+    if (useMultipleAccounts && canUseMultipleAccounts) {
+      // Multiple accounts mode: store as array
+      const accountsData: Array<{ game: string; package: string; fields: Record<string, string> }> = [];
+      
+      itemsByGameAndVariation.forEach(({ gameId, gameName, variationId, variationName, items }) => {
+        const firstItem = items[0];
+        if (!firstItem.customFields) return;
+        
+        const fields: Record<string, string> = {};
+        firstItem.customFields.forEach(field => {
+          const valueKey = `${gameId}_${variationId}_${field.key}`;
+          const value = customFieldValues[valueKey];
+          if (value) {
+            fields[field.label] = value;
+          }
+        });
+        
+        if (Object.keys(fields).length > 0) {
+          accountsData.push({
+            game: gameName,
+            package: variationName,
+            fields
+          });
+        }
+      });
+      
+      customerInfo = accountsData.length > 0 ? accountsData : {};
+    } else {
+      // Single account mode: store as flat object
+      const singleAccountInfo: Record<string, string> = {};
+      
+      // Add payment method
+      if (selectedPaymentMethod) {
+        singleAccountInfo['Payment Method'] = selectedPaymentMethod.name;
+      }
+
+      // Add custom fields
+      if (hasAnyCustomFields) {
+        itemsWithCustomFields.forEach((item) => {
+          const originalId = getOriginalMenuItemId(item.id);
+          item.customFields?.forEach(field => {
+            const valueKey = `${originalId}_${field.key}`;
+            const value = customFieldValues[valueKey];
+            if (value) {
+              singleAccountInfo[field.label] = value;
+            }
+          });
+        });
+      } else {
+        // Default IGN field
+        if (customFieldValues['default_ign']) {
+          singleAccountInfo['IGN'] = customFieldValues['default_ign'];
+        }
+      }
+      
+      customerInfo = singleAccountInfo;
+    }
+    return customerInfo;
+  };
+
   const handlePlaceOrder = async () => {
     if (!paymentMethod) {
       setReceiptError('Please select a payment method');
@@ -1101,6 +1199,9 @@ const Checkout: React.FC<CheckoutProps> = ({ cartItems, totalPrice, onBack, onNa
       setReceiptError('Please upload your payment receipt before placing the order');
       return;
     }
+
+    // Save order to database if not already saved
+    await saveOrderToDb();
 
     // Reuse the existing invoice number (don't generate a new one)
     // If no invoice number exists yet, it will generate one, but ideally Copy should be clicked first
@@ -1127,79 +1228,9 @@ const Checkout: React.FC<CheckoutProps> = ({ cartItems, totalPrice, onBack, onNa
     setReceiptError(null);
 
     try {
-      // Build customer info object
-      // Build customer info - handle multiple accounts mode
-      let customerInfo: Record<string, string> | Array<{ game: string; package: string; fields: Record<string, string> }>;
-      
-      if (useMultipleAccounts && canUseMultipleAccounts) {
-        // Multiple accounts mode: store as array
-        const accountsData: Array<{ game: string; package: string; fields: Record<string, string> }> = [];
-        
-        itemsByGameAndVariation.forEach(({ gameId, gameName, variationId, variationName, items }) => {
-          const firstItem = items[0];
-          if (!firstItem.customFields) return;
-          
-          const fields: Record<string, string> = {};
-          firstItem.customFields.forEach(field => {
-            const valueKey = `${gameId}_${variationId}_${field.key}`;
-            const value = customFieldValues[valueKey];
-            if (value) {
-              fields[field.label] = value;
-            }
-          });
-          
-          if (Object.keys(fields).length > 0) {
-            accountsData.push({
-              game: gameName,
-              package: variationName,
-              fields
-            });
-          }
-        });
-        
-        customerInfo = accountsData.length > 0 ? accountsData : {};
-      } else {
-        // Single account mode: store as flat object
-        const singleAccountInfo: Record<string, string> = {};
-        
-        // Add payment method
-        if (selectedPaymentMethod) {
-          singleAccountInfo['Payment Method'] = selectedPaymentMethod.name;
-        }
+      const savedOrderId = await saveOrderToDb();
 
-        // Add custom fields
-        if (hasAnyCustomFields) {
-          itemsWithCustomFields.forEach((item) => {
-            const originalId = getOriginalMenuItemId(item.id);
-            item.customFields?.forEach(field => {
-              const valueKey = `${originalId}_${field.key}`;
-              const value = customFieldValues[valueKey];
-              if (value) {
-                singleAccountInfo[field.label] = value;
-              }
-            });
-          });
-        } else {
-          // Default IGN field
-          if (customFieldValues['default_ign']) {
-            singleAccountInfo['IGN'] = customFieldValues['default_ign'];
-          }
-        }
-        
-        customerInfo = singleAccountInfo;
-      }
-
-      // Create order
-      const newOrder = await createOrder({
-        order_items: cartItems,
-        customer_info: customerInfo as Record<string, string> | Array<{ game: string; package: string; fields: Record<string, string> }>,
-        payment_method_id: paymentMethod,
-        receipt_url: receiptImageUrl,
-        total_price: totalPrice,
-      });
-
-      if (newOrder) {
-        setOrderId(newOrder.id);
+      if (savedOrderId) {
         setIsOrderModalOpen(true);
       } else {
         setReceiptError('Failed to create order. Please try again.');

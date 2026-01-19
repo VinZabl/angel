@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, Edit, Trash2, Save, X, ArrowLeft, TrendingUp, Package, Users, Lock, FolderOpen, CreditCard, Settings, ArrowUpDown, ChevronDown, ChevronUp, ShoppingBag, CheckCircle, Star, Activity, FilePlus, List, FolderTree, Wallet, Cog } from 'lucide-react';
+import { Plus, Edit, Trash2, Save, X, ArrowLeft, TrendingUp, Package, Users, Lock, FolderOpen, CreditCard, Settings, ArrowUpDown, ChevronDown, ChevronUp, ShoppingBag, CheckCircle, Star, Activity, FilePlus, List, FolderTree, Wallet, Cog, Trophy, DollarSign, Clock } from 'lucide-react';
 import { MenuItem, Variation, CustomField } from '../types';
 import { useMenu } from '../hooks/useMenu';
 import { useCategories } from '../hooks/useCategories';
@@ -8,7 +8,9 @@ import CategoryManager from './CategoryManager';
 import PaymentMethodManager from './PaymentMethodManager';
 import SiteSettingsManager from './SiteSettingsManager';
 import OrderManager from './OrderManager';
+import MemberDashboard from './MemberDashboard';
 import { supabase } from '../lib/supabase';
+import { useMembers } from '../hooks/useMembers';
 
 const AdminDashboard: React.FC = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(() => {
@@ -19,7 +21,12 @@ const AdminDashboard: React.FC = () => {
   const [adminPassword, setAdminPassword] = useState<string>('AmberKin@Admin!2025'); // Default fallback
   const { menuItems, loading, addMenuItem, updateMenuItem, deleteMenuItem } = useMenu();
   const { categories } = useCategories();
-  const [currentView, setCurrentView] = useState<'dashboard' | 'items' | 'add' | 'edit' | 'categories' | 'payments' | 'settings' | 'orders'>('dashboard');
+  const { members, topMembers } = useMembers();
+  const [currentView, setCurrentView] = useState<'dashboard' | 'items' | 'add' | 'edit' | 'categories' | 'payments' | 'settings' | 'orders' | 'members'>('dashboard');
+  const [adminSection, setAdminSection] = useState<'customers' | 'members'>('customers');
+  const [totalSales, setTotalSales] = useState<number>(0);
+  const [pendingOrders, setPendingOrders] = useState<number>(0);
+  const [doneOrdersCount, setDoneOrdersCount] = useState<number>(0);
 
   // Fetch admin password from database on mount
   useEffect(() => {
@@ -42,6 +49,81 @@ const AdminDashboard: React.FC = () => {
 
     fetchAdminPassword();
   }, []);
+
+  // Fetch total sales, pending orders, and done orders
+  useEffect(() => {
+    const fetchTotalSales = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('orders')
+          .select('total_price');
+
+        if (error) throw error;
+
+        const sales = data?.reduce((sum, order) => sum + (order.total_price || 0), 0) || 0;
+        setTotalSales(sales);
+      } catch (err) {
+        console.error('Error fetching total sales:', err);
+      }
+    };
+
+    const fetchPendingOrders = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('orders')
+          .select('id, order_option')
+          .eq('status', 'pending');
+
+        if (error) throw error;
+
+        // Only count orders placed via "place_order", exclude "order_via_messenger"
+        const placeOrderPending = data?.filter(order => {
+          const orderOption = order.order_option || 'place_order';
+          return orderOption === 'place_order';
+        }).length || 0;
+
+        setPendingOrders(placeOrderPending);
+      } catch (err) {
+        console.error('Error fetching pending orders:', err);
+      }
+    };
+
+    const fetchDoneOrders = async () => {
+      try {
+        // Fetch all orders with member_id
+        const { data, error } = await supabase
+          .from('orders')
+          .select('id, status, order_option, member_id')
+          .not('member_id', 'is', null);
+
+        if (error) throw error;
+
+        // Count orders that are:
+        // 1. status = 'approved' (for regular orders)
+        // 2. status = 'pending' AND order_option = 'order_via_messenger' (for messenger orders)
+        const doneCount = data?.filter(order => {
+          if (order.status === 'approved') {
+            return true;
+          }
+          if (order.status === 'pending' && order.order_option === 'order_via_messenger') {
+            return true;
+          }
+          return false;
+        }).length || 0;
+
+        setDoneOrdersCount(doneCount);
+      } catch (err) {
+        console.error('Error fetching done orders:', err);
+      }
+    };
+
+    if (adminSection === 'members') {
+      fetchTotalSales();
+      fetchDoneOrders();
+    } else {
+      fetchPendingOrders();
+    }
+  }, [adminSection]);
   const [editingItem, setEditingItem] = useState<MenuItem | null>(null);
   const [selectedItems, setSelectedItems] = useState<string[]>([]);
   const [isProcessing, setIsProcessing] = useState(false);
@@ -320,9 +402,16 @@ const AdminDashboard: React.FC = () => {
 
 
   // Dashboard Stats
-  const totalItems = menuItems.length;
-  const popularItems = menuItems.filter(item => item.popular).length;
-  const availableItems = menuItems.filter(item => item.available).length;
+  const totalItems = adminSection === 'members' ? members.length : menuItems.length;
+  const popularItems = adminSection === 'members' 
+    ? (topMembers[1]?.member.username || 'N/A')
+    : menuItems.filter(item => item.popular).length;
+  const availableItems = adminSection === 'members'
+    ? (topMembers[0]?.member.username || 'N/A')
+    : pendingOrders;
+  const doneOrders = adminSection === 'members'
+    ? doneOrdersCount
+    : 'Online';
   const categoryCounts = categories.map(cat => ({
     ...cat,
     count: menuItems.filter(item => item.category === cat.id).length
@@ -1916,6 +2005,7 @@ const AdminDashboard: React.FC = () => {
     );
   }
 
+
   // Dashboard View
   return (
     <div className="min-h-screen bg-gray-50">
@@ -1949,10 +2039,16 @@ const AdminDashboard: React.FC = () => {
           <div className="bg-white rounded-xl shadow-sm p-4 md:p-6">
             <div className="flex flex-col md:flex-row md:items-center">
               <div className="mb-2 md:mb-0">
-                <ShoppingBag className="h-6 w-6 md:h-8 md:w-8 text-blue-600" />
+                {adminSection === 'members' ? (
+                  <Users className="h-6 w-6 md:h-8 md:w-8 text-blue-600" />
+                ) : (
+                  <ShoppingBag className="h-6 w-6 md:h-8 md:w-8 text-blue-600" />
+                )}
               </div>
               <div className="md:ml-4">
-                <p className="text-xs md:text-sm font-medium text-gray-600">Total Items</p>
+                <p className="text-xs md:text-sm font-medium text-gray-600">
+                  {adminSection === 'members' ? 'Total Members' : 'Total Items'}
+                </p>
                 <p className="text-xl md:text-2xl font-semibold text-gray-900">{totalItems}</p>
               </div>
             </div>
@@ -1961,10 +2057,16 @@ const AdminDashboard: React.FC = () => {
           <div className="bg-white rounded-xl shadow-sm p-4 md:p-6">
             <div className="flex flex-col md:flex-row md:items-center">
               <div className="mb-2 md:mb-0">
-                <CheckCircle className="h-6 w-6 md:h-8 md:w-8 text-emerald-600" />
+                {adminSection === 'members' ? (
+                  <Trophy className="h-6 w-6 md:h-8 md:w-8 text-amber-500" />
+                ) : (
+                  <Clock className="h-6 w-6 md:h-8 md:w-8 text-emerald-600" />
+                )}
               </div>
               <div className="md:ml-4">
-                <p className="text-xs md:text-sm font-medium text-gray-600">Available Items</p>
+                <p className="text-xs md:text-sm font-medium text-gray-600">
+                  {adminSection === 'members' ? 'Top Member' : 'Pending Orders'}
+                </p>
                 <p className="text-xl md:text-2xl font-semibold text-gray-900">{availableItems}</p>
               </div>
             </div>
@@ -1973,11 +2075,17 @@ const AdminDashboard: React.FC = () => {
           <div className="bg-white rounded-xl shadow-sm p-4 md:p-6">
             <div className="flex flex-col md:flex-row md:items-center">
               <div className="mb-2 md:mb-0">
-                <Star className="h-6 w-6 md:h-8 md:w-8 text-amber-500" />
+                {adminSection === 'members' ? (
+                  <CheckCircle className="h-6 w-6 md:h-8 md:w-8 text-emerald-600" />
+                ) : (
+                  <Star className="h-6 w-6 md:h-8 md:w-8 text-amber-500" />
+                )}
               </div>
               <div className="md:ml-4">
-                <p className="text-xs md:text-sm font-medium text-gray-600">Popular Items</p>
-                <p className="text-xl md:text-2xl font-semibold text-gray-900">{popularItems}</p>
+                <p className="text-xs md:text-sm font-medium text-gray-600">
+                  {adminSection === 'members' ? 'Done Orders' : 'Popular Items'}
+                </p>
+                <p className="text-xl md:text-2xl font-semibold text-gray-900">{adminSection === 'members' ? doneOrders : popularItems}</p>
               </div>
             </div>
           </div>
@@ -1985,17 +2093,57 @@ const AdminDashboard: React.FC = () => {
           <div className="bg-white rounded-xl shadow-sm p-4 md:p-6">
             <div className="flex flex-col md:flex-row md:items-center">
               <div className="mb-2 md:mb-0">
-                <Activity className="h-6 w-6 md:h-8 md:w-8 text-indigo-600" />
+                {adminSection === 'members' ? (
+                  <DollarSign className="h-6 w-6 md:h-8 md:w-8 text-indigo-600" />
+                ) : (
+                  <Activity className="h-6 w-6 md:h-8 md:w-8 text-indigo-600" />
+                )}
               </div>
               <div className="md:ml-4">
-                <p className="text-xs md:text-sm font-medium text-gray-600">Active</p>
-                <p className="text-xl md:text-2xl font-semibold text-gray-900">Online</p>
+                <p className="text-xs md:text-sm font-medium text-gray-600">
+                  {adminSection === 'members' ? 'Total Sales' : 'Active'}
+                </p>
+                <p className="text-xl md:text-2xl font-semibold text-gray-900">{adminSection === 'members' ? `₱${totalSales.toFixed(2)}` : 'Online'}</p>
               </div>
             </div>
           </div>
         </div>
 
+        {/* Section Selector */}
+        <div className="mb-6 flex space-x-4">
+          <button
+            onClick={() => setAdminSection('customers')}
+            className={`px-6 py-3 rounded-lg font-semibold transition-colors ${
+              adminSection === 'customers'
+                ? 'bg-blue-600 text-white'
+                : 'bg-white text-gray-700 hover:bg-gray-50'
+            }`}
+          >
+            Customers
+          </button>
+          <button
+            onClick={() => {
+              setAdminSection('members');
+            }}
+            className={`px-6 py-3 rounded-lg font-semibold transition-colors ${
+              adminSection === 'members'
+                ? 'bg-blue-600 text-white'
+                : 'bg-white text-gray-700 hover:bg-gray-50'
+            }`}
+          >
+            Members
+          </button>
+        </div>
+
+        {/* Members Section */}
+        {adminSection === 'members' && (
+          <div className="max-w-7xl mx-auto px-4 py-8">
+            <MemberDashboard />
+          </div>
+        )}
+
         {/* Quick Actions */}
+        {adminSection === 'customers' && (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
           <div className="bg-white rounded-xl shadow-sm p-4 md:p-6">
             <div className="space-y-3">
@@ -2058,6 +2206,7 @@ const AdminDashboard: React.FC = () => {
             </div>
           </div>
         </div>
+        )}
       </div>
     </div>
   );

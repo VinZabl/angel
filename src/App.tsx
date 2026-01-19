@@ -8,15 +8,23 @@ import Cart from './components/Cart';
 import Checkout from './components/Checkout';
 import FloatingSupportButton from './components/FloatingSupportButton';
 import AdminDashboard from './components/AdminDashboard';
+import MemberLogin from './components/MemberLogin';
+import WelcomeModal from './components/WelcomeModal';
+import MemberProfile from './components/MemberProfile';
 import { useMenu } from './hooks/useMenu';
+import { useMemberAuth } from './hooks/useMemberAuth';
 import Footer from './components/Footer';
 
 function MainApp() {
   const cart = useCart();
   const { menuItems } = useMenu();
-  const [currentView, setCurrentView] = React.useState<'menu' | 'cart' | 'checkout'>('menu');
+  const { currentMember, logout } = useMemberAuth();
+  const [currentView, setCurrentView] = React.useState<'menu' | 'cart' | 'checkout' | 'member-login'>('menu');
   const [selectedCategory, setSelectedCategory] = React.useState<string>('all');
   const [searchQuery, setSearchQuery] = React.useState<string>('');
+  const [showWelcomeModal, setShowWelcomeModal] = React.useState(false);
+  const [showMemberProfile, setShowMemberProfile] = React.useState(false);
+  const [justLoggedIn, setJustLoggedIn] = React.useState(false);
 
   const handleViewChange = (view: 'menu' | 'cart' | 'checkout') => {
     setCurrentView(view);
@@ -54,6 +62,49 @@ function MainApp() {
     }
   }, [hasPopularItems, selectedCategory, menuItems.length]);
 
+  // Show welcome modal when member logs in
+  React.useEffect(() => {
+    if (currentMember && justLoggedIn) {
+      setShowWelcomeModal(true);
+      setJustLoggedIn(false);
+    }
+  }, [currentMember, justLoggedIn]);
+
+  // Redirect from login view if member is already logged in
+  React.useEffect(() => {
+    if (currentMember && currentView === 'member-login') {
+      setCurrentView('menu');
+      setJustLoggedIn(true);
+    }
+  }, [currentMember, currentView]);
+
+  const handleMemberClick = () => {
+    if (currentMember) {
+      // If already logged in, show member profile
+      setShowMemberProfile(true);
+    } else {
+      setCurrentView('member-login');
+    }
+  };
+
+  const handleGetStarted = () => {
+    // Show profile after Get Started is clicked
+    setShowMemberProfile(true);
+  };
+
+  const handleLogout = () => {
+    logout();
+    setShowMemberProfile(false);
+    setShowWelcomeModal(false);
+  };
+
+  const handleLoginSuccess = () => {
+    // Force view change immediately
+    setCurrentView('menu');
+    // Set justLoggedIn to trigger welcome modal
+    setJustLoggedIn(true);
+  };
+
   // Filter menu items based on selected category and search query
   const filteredMenuItems = React.useMemo(() => {
     let filtered = menuItems;
@@ -78,11 +129,14 @@ function MainApp() {
 
   return (
     <div className="min-h-screen bg-cafe-darkBg bg-logo-overlay">
-      <Header 
-        cartItemsCount={cart.getTotalItems()}
-        onCartClick={() => handleViewChange('cart')}
-        onMenuClick={() => handleViewChange('menu')}
-      />
+      {currentView !== 'member-login' && (
+        <Header 
+          cartItemsCount={cart.getTotalItems()}
+          onCartClick={() => handleViewChange('cart')}
+          onMenuClick={() => handleViewChange('menu')}
+          onMemberClick={handleMemberClick}
+        />
+      )}
       {currentView === 'menu' && (
         <SubNav 
           selectedCategory={selectedCategory} 
@@ -101,6 +155,7 @@ function MainApp() {
           updateQuantity={cart.updateQuantity}
           selectedCategory={selectedCategory}
           searchQuery={searchQuery}
+          currentMember={currentMember}
           onItemAdded={handleItemAdded}
         />
       )}
@@ -128,10 +183,34 @@ function MainApp() {
           }}
         />
       )}
-      
-      <FloatingSupportButton />
 
-      <Footer />
+      {currentView === 'member-login' && (
+        <MemberLogin 
+          onBack={() => handleViewChange('menu')}
+          onLoginSuccess={handleLoginSuccess}
+        />
+      )}
+      
+      {showWelcomeModal && currentMember && (
+        <WelcomeModal 
+          username={currentMember.username}
+          onClose={() => setShowWelcomeModal(false)}
+          onGetStarted={handleGetStarted}
+        />
+      )}
+      {showMemberProfile && currentMember && (
+        <MemberProfile
+          onClose={() => setShowMemberProfile(false)}
+          onLogout={handleLogout}
+        />
+      )}
+      
+      {currentView !== 'member-login' && (
+        <>
+          <FloatingSupportButton />
+          <Footer />
+        </>
+      )}
     </div>
   );
 }
@@ -142,6 +221,7 @@ function App() {
       <Routes>
         <Route path="/" element={<MainApp />} />
         <Route path="/admin" element={<AdminDashboard />} />
+        <Route path="/member/login" element={<MainApp />} />
       </Routes>
     </Router>
   );

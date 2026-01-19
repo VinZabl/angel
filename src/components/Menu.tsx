@@ -21,9 +21,10 @@ interface MenuProps {
   selectedCategory: string;
   searchQuery?: string;
   onItemAdded?: () => void; // Callback when item is added from modal
+  currentMember?: { username: string } | null; // Current logged-in member
 }
 
-const Menu: React.FC<MenuProps> = ({ menuItems, addToCart, cartItems, updateQuantity, selectedCategory, searchQuery = '', onItemAdded }) => {
+const Menu: React.FC<MenuProps> = ({ menuItems, addToCart, cartItems, updateQuantity, selectedCategory, searchQuery = '', onItemAdded, currentMember }) => {
   const { categories } = useCategories();
   const [activeCategory, setActiveCategory] = React.useState(selectedCategory === 'popular' ? 'popular' : 'hot-coffee');
 
@@ -208,6 +209,13 @@ const Menu: React.FC<MenuProps> = ({ menuItems, addToCart, cartItems, updateQuan
 
     return (
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 md:pt-10 pb-4 md:pb-6">
+        {currentMember && (
+          <div className="mb-4 md:mb-6">
+            <p className="text-lg md:text-xl font-medium text-cafe-text">
+              Welcome back, {currentMember.username}!
+            </p>
+          </div>
+        )}
         <section id="popular" className="mb-6 md:mb-8">
           <div className="flex items-center mb-3 md:mb-4">
             <h3 className="text-3xl font-medium text-cafe-text">Popular</h3>
@@ -229,6 +237,15 @@ const Menu: React.FC<MenuProps> = ({ menuItems, addToCart, cartItems, updateQuan
   return (
     <>
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 md:pt-10 pb-4 md:pb-6">
+        {/* Welcome message for logged-in members */}
+        {currentMember && (
+          <div className="mb-4 md:mb-6">
+            <p className="text-lg md:text-xl font-medium text-cafe-text">
+              Welcome back, {currentMember.username}!
+            </p>
+          </div>
+        )}
+        
         {/* Show Popular section when viewing "All" */}
         {showPopularSection && (
           <section id="popular" className="mb-8 md:mb-12">

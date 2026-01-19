@@ -1,6 +1,8 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { X } from 'lucide-react';
 import { MenuItem, Variation } from '../types';
+import { useMemberAuth } from '../hooks/useMemberAuth';
+import { useMemberDiscounts } from '../hooks/useMemberDiscounts';
 
 interface MenuItemCardProps {
   item: MenuItem;
@@ -23,8 +25,53 @@ const MenuItemCard: React.FC<MenuItemCardProps> = ({
   );
   const nameRef = useRef<HTMLHeadingElement>(null);
   const [shouldScroll, setShouldScroll] = useState(false);
+  const { currentMember, isReseller } = useMemberAuth();
+  const { getDiscountForItem } = useMemberDiscounts();
+  const [memberDiscounts, setMemberDiscounts] = useState<Record<string, number>>({});
+
+  // Fetch member discounts for all variations when component mounts or member changes
+  useEffect(() => {
+    const fetchDiscounts = async () => {
+      if (isReseller() && currentMember && item.variations) {
+        const discounts: Record<string, number> = {};
+        for (const variation of item.variations) {
+          const discount = await getDiscountForItem(currentMember.id, item.id, variation.id);
+          if (discount) {
+            discounts[variation.id] = discount.selling_price;
+          }
+        }
+        setMemberDiscounts(discounts);
+      } else {
+        setMemberDiscounts({});
+      }
+    };
+    fetchDiscounts();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isReseller(), currentMember?.id, item.id]);
+
   // Calculate discounted price for a variation/currency package
-  const getDiscountedPrice = (basePrice: number): number => {
+  const getDiscountedPrice = async (basePrice: number, variationId?: string): Promise<number> => {
+    // If user is reseller and has member discount for this variation, use it
+    if (isReseller() && currentMember && variationId && memberDiscounts[variationId]) {
+      return memberDiscounts[variationId];
+    }
+    
+    // Otherwise, use regular discount logic
+    if (item.isOnDiscount && item.discountPercentage !== undefined) {
+      const discountAmount = (basePrice * item.discountPercentage) / 100;
+      return basePrice - discountAmount;
+    }
+    return basePrice;
+  };
+
+  // Synchronous version for immediate display (uses cached discounts)
+  const getDiscountedPriceSync = (basePrice: number, variationId?: string): number => {
+    // If user is reseller and has member discount for this variation, use it
+    if (isReseller() && currentMember && variationId && memberDiscounts[variationId]) {
+      return memberDiscounts[variationId];
+    }
+    
+    // Otherwise, use regular discount logic
     if (item.isOnDiscount && item.discountPercentage !== undefined) {
       const discountAmount = (basePrice * item.discountPercentage) / 100;
       return basePrice - discountAmount;
@@ -278,8 +325,9 @@ const MenuItemCard: React.FC<MenuItemCardProps> = ({
                             <div className="grid grid-cols-2 gap-3">
                               {groupedByCategory[category].variations.map((variation) => {
                                 const originalPrice = variation.price;
-                                const discountedPrice = getDiscountedPrice(originalPrice);
-                                const isDiscounted = item.isOnDiscount && item.discountPercentage !== undefined;
+                                const discountedPrice = getDiscountedPriceSync(originalPrice, variation.id);
+                                const hasMemberDiscount = isReseller() && currentMember && memberDiscounts[variation.id];
+                                const isDiscounted = hasMemberDiscount || (item.isOnDiscount && item.discountPercentage !== undefined);
                                 
                                 return (
                                   <button
@@ -308,9 +356,15 @@ const MenuItemCard: React.FC<MenuItemCardProps> = ({
                                             <div className="text-xs text-gray-500 line-through">
                                               ₱{originalPrice.toFixed(2)}
                                             </div>
-                                            <div className="text-xs text-gray-900 font-semibold">
-                                              -{item.discountPercentage}%
-                                            </div>
+                                            {hasMemberDiscount ? (
+                                              <div className="text-xs text-green-600 font-semibold">
+                                                Member Price
+                                              </div>
+                                            ) : (
+                                              <div className="text-xs text-gray-900 font-semibold">
+                                                -{item.discountPercentage}%
+                                              </div>
+                                            )}
                                           </div>
                                         )}
                                       </div>

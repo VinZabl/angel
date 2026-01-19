@@ -112,6 +112,8 @@ export interface Order {
   receipt_url: string;
   total_price: number;
   status: OrderStatus;
+  order_option?: 'order_via_messenger' | 'place_order';
+  member_id?: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -122,4 +124,47 @@ export interface CreateOrderData {
   payment_method_id: string;
   receipt_url: string;
   total_price: number;
+  member_id?: string;
+  order_option?: 'order_via_messenger' | 'place_order';
+}
+
+// Member Types
+export type MemberStatus = 'active' | 'inactive';
+export type MemberUserType = 'reseller' | 'end_user';
+
+export interface Member {
+  id: string;
+  username: string;
+  email: string;
+  mobile_no: string;
+  level: number;
+  status: MemberStatus;
+  user_type: MemberUserType;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface MemberDiscount {
+  id: string;
+  member_id: string;
+  menu_item_id: string;
+  variation_id: string | null;
+  discount_percentage: number;
+  capital_price: number;
+  selling_price: number;
+  profit: number;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface CreateMemberData {
+  username: string;
+  email: string;
+  mobile_no: string;
+  password: string;
+}
+
+export interface LoginMemberData {
+  email: string;
+  password: string;
 }

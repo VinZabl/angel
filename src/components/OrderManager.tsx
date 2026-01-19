@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { CheckCircle, XCircle, Loader2, Eye, Download, X, Copy } from 'lucide-react';
-import { Order, OrderStatus } from '../types';
+import { CheckCircle, XCircle, Loader2, Eye, Download, X, Copy, User } from 'lucide-react';
+import { Order, OrderStatus, Member } from '../types';
 import { useOrders } from '../hooks/useOrders';
+import { supabase } from '../lib/supabase';
 
 const OrderManager: React.FC = () => {
   const { orders, loading, fetchOrders, updateOrderStatus } = useOrders();
@@ -9,10 +10,41 @@ const OrderManager: React.FC = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [timeKey, setTimeKey] = useState(0); // Force re-render for time updates
   const [copiedField, setCopiedField] = useState<string | null>(null);
+  const [orderFilter, setOrderFilter] = useState<'place_order' | 'order_via_messenger'>('place_order');
+  const [memberMap, setMemberMap] = useState<Record<string, Member>>({});
 
   useEffect(() => {
     fetchOrders();
   }, []);
+
+  // Fetch member information for orders
+  useEffect(() => {
+    const fetchMembers = async () => {
+      const memberIds = [...new Set(orders.filter(o => o.member_id).map(o => o.member_id!))];
+      if (memberIds.length === 0) return;
+
+      try {
+        const { data, error } = await supabase
+          .from('members')
+          .select('id, username, email, mobile_no')
+          .in('id', memberIds);
+
+        if (error) throw error;
+
+        const map: Record<string, Member> = {};
+        data?.forEach(member => {
+          map[member.id] = member as Member;
+        });
+        setMemberMap(map);
+      } catch (err) {
+        console.error('Error fetching members:', err);
+      }
+    };
+
+    if (orders.length > 0) {
+      fetchMembers();
+    }
+  }, [orders]);
 
   // Update time indicators every minute
   useEffect(() => {
@@ -73,7 +105,19 @@ const OrderManager: React.FC = () => {
     }
   };
 
-  const getStatusBadge = (status: OrderStatus) => {
+  const getStatusBadge = (order: Order) => {
+    const orderOption = order.order_option || 'place_order';
+    const status = order.status;
+
+    // For messenger orders with pending status, show "Done"
+    if (orderOption === 'order_via_messenger' && status === 'pending') {
+      return (
+        <span className="px-3 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800 border border-green-200">
+          Done
+        </span>
+      );
+    }
+
     switch (status) {
       case 'pending':
         return (
@@ -110,9 +154,40 @@ const OrderManager: React.FC = () => {
     );
   }
 
+  // Filter orders based on selected filter
+  const filteredOrders = orders.filter(order => {
+    const orderOption = order.order_option || 'place_order';
+    return orderOption === orderFilter;
+  });
+
   return (
     <div className="space-y-3 md:space-y-6">
-      <div className="flex items-center justify-end mb-3 md:mb-6">
+      <div className="flex items-center justify-between mb-3 md:mb-6">
+        {/* Filter Buttons */}
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => setOrderFilter('place_order')}
+            className={`px-3 py-1.5 md:px-4 md:py-2 rounded-lg transition-colors duration-200 text-xs md:text-sm font-medium ${
+              orderFilter === 'place_order'
+                ? 'bg-blue-500 text-white border border-blue-600'
+                : 'bg-white border border-gray-300 text-gray-700 hover:bg-gray-50'
+            }`}
+          >
+            Via Place Order
+          </button>
+          <button
+            onClick={() => setOrderFilter('order_via_messenger')}
+            className={`px-3 py-1.5 md:px-4 md:py-2 rounded-lg transition-colors duration-200 text-xs md:text-sm font-medium ${
+              orderFilter === 'order_via_messenger'
+                ? 'bg-blue-500 text-white border border-blue-600'
+                : 'bg-white border border-gray-300 text-gray-700 hover:bg-gray-50'
+            }`}
+          >
+            Via Messenger
+          </button>
+        </div>
+        
+        {/* Refresh Button */}
         <button
           onClick={fetchOrders}
           className="px-3 py-1.5 md:px-4 md:py-2 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors duration-200 text-gray-700 flex items-center gap-1.5 md:gap-2 shadow-sm text-xs md:text-sm"
@@ -122,13 +197,13 @@ const OrderManager: React.FC = () => {
         </button>
       </div>
 
-      {orders.length === 0 ? (
+      {filteredOrders.length === 0 ? (
         <div className="text-center py-12 bg-white rounded-lg border border-gray-200">
           <p className="text-gray-500">No orders found</p>
         </div>
       ) : (
         <div className="space-y-3">
-           {orders.map((order) => (
+           {filteredOrders.map((order) => (
              <div
                key={order.id}
                className="bg-white rounded-lg shadow-sm border border-gray-200 p-3 md:p-6 hover:shadow-md transition-shadow duration-200 relative"
@@ -152,12 +227,24 @@ const OrderManager: React.FC = () => {
                {/* Order Header with Status */}
                <div className="flex items-start justify-end mb-4 pl-32 pr-2">
                  <div className="flex flex-col items-end gap-1.5">
-                   {getStatusBadge(order.status)}
+                   {getStatusBadge(order)}
                    <p className="text-xs text-gray-500">
                      {new Date(order.created_at).toLocaleString()}
                    </p>
                  </div>
                </div>
+
+              {/* Member Information */}
+              {order.member_id && memberMap[order.member_id] && (
+                <div className="mb-3 pb-3 border-b border-gray-200">
+                  <div className="flex items-center gap-2 text-sm">
+                    <User className="h-4 w-4 text-gray-500" />
+                    <span className="text-gray-600">Member:</span>
+                    <span className="font-semibold text-gray-900">{memberMap[order.member_id].username}</span>
+                    <span className="text-gray-500">({memberMap[order.member_id].email})</span>
+                  </div>
+                </div>
+              )}
 
               {/* Order Summary */}
               <div className="grid grid-cols-3 gap-4 mb-4 pb-4 border-b border-gray-200">
@@ -184,7 +271,7 @@ const OrderManager: React.FC = () => {
                   <span className="hidden sm:inline">View Details</span>
                   <span className="sm:hidden">View</span>
                 </button>
-                 {order.status === 'pending' && (
+                 {(order.order_option || 'place_order') !== 'order_via_messenger' && order.status === 'pending' && (
                    <>
                      <button
                        onClick={() => handleApprove(order.id)}
@@ -202,7 +289,7 @@ const OrderManager: React.FC = () => {
                      </button>
                    </>
                  )}
-                 {order.status === 'processing' && (
+                 {(order.order_option || 'place_order') !== 'order_via_messenger' && order.status === 'processing' && (
                    <>
                      <button
                        onClick={() => handleApprove(order.id)}
@@ -249,8 +336,32 @@ const OrderManager: React.FC = () => {
               {/* Order Status */}
               <div className="flex items-center gap-2 md:gap-3">
                 <span className="text-xs md:text-sm text-gray-600">Status:</span>
-                {getStatusBadge(selectedOrder.status)}
+                {getStatusBadge(selectedOrder)}
               </div>
+
+              {/* Member Information */}
+              {selectedOrder.member_id && memberMap[selectedOrder.member_id] && (
+                <div className="bg-blue-50 rounded-lg p-3 md:p-4 border border-blue-200">
+                  <h3 className="text-sm md:text-base font-medium text-gray-900 mb-2 md:mb-3 flex items-center gap-2">
+                    <User className="h-4 w-4 md:h-5 md:w-5 text-blue-600" />
+                    Registered Member
+                  </h3>
+                  <div className="space-y-1.5 md:space-y-2">
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs md:text-sm text-gray-600">Username:</span>
+                      <span className="text-xs md:text-sm font-semibold text-gray-900">{memberMap[selectedOrder.member_id].username}</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs md:text-sm text-gray-600">Email:</span>
+                      <span className="text-xs md:text-sm text-gray-900">{memberMap[selectedOrder.member_id].email}</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs md:text-sm text-gray-600">Mobile:</span>
+                      <span className="text-xs md:text-sm text-gray-900">{memberMap[selectedOrder.member_id].mobile_no}</span>
+                    </div>
+                  </div>
+                </div>
+              )}
 
               {/* Order Items */}
               <div className="bg-gray-50 rounded-lg p-3 md:p-4 border border-gray-200">
@@ -372,44 +483,46 @@ const OrderManager: React.FC = () => {
               </div>
 
               {/* Action Buttons */}
-              <div className="flex items-center gap-2 md:gap-3 pt-3 md:pt-4 border-t border-gray-200 flex-wrap">
-                {selectedOrder.status === 'pending' && (
-                  <>
-                    <button
-                      onClick={() => handleApprove(selectedOrder.id)}
-                      className="px-3 py-1.5 md:px-4 md:py-2 bg-green-50 border border-green-200 rounded-lg hover:bg-green-100 transition-colors duration-200 text-green-700 flex items-center gap-1.5 md:gap-2 text-xs md:text-sm font-medium"
-                    >
-                      <CheckCircle className="h-3.5 w-3.5 md:h-4 md:w-4" />
-                      Approve
-                    </button>
-                    <button
-                      onClick={() => handleReject(selectedOrder.id)}
-                      className="px-3 py-1.5 md:px-4 md:py-2 bg-red-50 border border-red-200 rounded-lg hover:bg-red-100 transition-colors duration-200 text-red-700 flex items-center gap-1.5 md:gap-2 text-xs md:text-sm font-medium"
-                    >
-                      <XCircle className="h-3.5 w-3.5 md:h-4 md:w-4" />
-                      Reject
-                    </button>
-                  </>
-                )}
-                {selectedOrder.status === 'processing' && (
-                  <>
-                    <button
-                      onClick={() => handleApprove(selectedOrder.id)}
-                      className="px-3 py-1.5 md:px-4 md:py-2 bg-green-50 border border-green-200 rounded-lg hover:bg-green-100 transition-colors duration-200 text-green-700 flex items-center gap-1.5 md:gap-2 text-xs md:text-sm font-medium"
-                    >
-                      <CheckCircle className="h-3.5 w-3.5 md:h-4 md:w-4" />
-                      Approve
-                    </button>
-                    <button
-                      onClick={() => handleReject(selectedOrder.id)}
-                      className="px-3 py-1.5 md:px-4 md:py-2 bg-red-50 border border-red-200 rounded-lg hover:bg-red-100 transition-colors duration-200 text-red-700 flex items-center gap-1.5 md:gap-2 text-xs md:text-sm font-medium"
-                    >
-                      <XCircle className="h-3.5 w-3.5 md:h-4 md:w-4" />
-                      Reject
-                    </button>
-                  </>
-                )}
-               </div>
+              {(selectedOrder.order_option || 'place_order') !== 'order_via_messenger' && (
+                <div className="flex items-center gap-2 md:gap-3 pt-3 md:pt-4 border-t border-gray-200 flex-wrap">
+                  {selectedOrder.status === 'pending' && (
+                    <>
+                      <button
+                        onClick={() => handleApprove(selectedOrder.id)}
+                        className="px-3 py-1.5 md:px-4 md:py-2 bg-green-50 border border-green-200 rounded-lg hover:bg-green-100 transition-colors duration-200 text-green-700 flex items-center gap-1.5 md:gap-2 text-xs md:text-sm font-medium"
+                      >
+                        <CheckCircle className="h-3.5 w-3.5 md:h-4 md:w-4" />
+                        Approve
+                      </button>
+                      <button
+                        onClick={() => handleReject(selectedOrder.id)}
+                        className="px-3 py-1.5 md:px-4 md:py-2 bg-red-50 border border-red-200 rounded-lg hover:bg-red-100 transition-colors duration-200 text-red-700 flex items-center gap-1.5 md:gap-2 text-xs md:text-sm font-medium"
+                      >
+                        <XCircle className="h-3.5 w-3.5 md:h-4 md:w-4" />
+                        Reject
+                      </button>
+                    </>
+                  )}
+                  {selectedOrder.status === 'processing' && (
+                    <>
+                      <button
+                        onClick={() => handleApprove(selectedOrder.id)}
+                        className="px-3 py-1.5 md:px-4 md:py-2 bg-green-50 border border-green-200 rounded-lg hover:bg-green-100 transition-colors duration-200 text-green-700 flex items-center gap-1.5 md:gap-2 text-xs md:text-sm font-medium"
+                      >
+                        <CheckCircle className="h-3.5 w-3.5 md:h-4 md:w-4" />
+                        Approve
+                      </button>
+                      <button
+                        onClick={() => handleReject(selectedOrder.id)}
+                        className="px-3 py-1.5 md:px-4 md:py-2 bg-red-50 border border-red-200 rounded-lg hover:bg-red-100 transition-colors duration-200 text-red-700 flex items-center gap-1.5 md:gap-2 text-xs md:text-sm font-medium"
+                      >
+                        <XCircle className="h-3.5 w-3.5 md:h-4 md:w-4" />
+                        Reject
+                      </button>
+                    </>
+                  )}
+                </div>
+              )}
             </div>
           </div>
         </div>

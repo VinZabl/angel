@@ -57,6 +57,8 @@ export const useOrders = () => {
           payment_method_id: orderData.payment_method_id,
           receipt_url: orderData.receipt_url,
           total_price: orderData.total_price,
+          member_id: orderData.member_id || null,
+          order_option: orderData.order_option || 'place_order',
           status: 'pending',
         })
         .select()
