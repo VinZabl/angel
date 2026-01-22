@@ -83,6 +83,7 @@ const AdminDashboard: React.FC = () => {
   const [collapsedCategories, setCollapsedCategories] = useState<Record<string, boolean>>({});
   const [categoryToDelete, setCategoryToDelete] = useState<string | null>(null);
   const [priceDiscount, setPriceDiscount] = useState<number | undefined>(undefined);
+  const [memberDiscount, setMemberDiscount] = useState<number | undefined>(undefined);
   const [resellerDiscount, setResellerDiscount] = useState<number | undefined>(undefined);
   const [formData, setFormData] = useState<Partial<MenuItem>>({
     name: '',
@@ -105,6 +106,7 @@ const AdminDashboard: React.FC = () => {
     setCurrentView('add');
     const defaultCategory = categories.length > 0 ? categories[0].id : 'dim-sum';
     setPriceDiscount(undefined);
+    setMemberDiscount(undefined);
     setResellerDiscount(undefined);
     setFormData({
       name: '',
@@ -120,8 +122,24 @@ const AdminDashboard: React.FC = () => {
   const handleEditItem = (item: MenuItem) => {
     setEditingItem(item);
     setFormData(item);
-    setPriceDiscount(undefined);
-    setResellerDiscount(undefined);
+    // Restore discount values from localStorage if they exist
+    const savedDiscounts = localStorage.getItem(`amber_discounts_${item.id}`);
+    if (savedDiscounts) {
+      try {
+        const discounts = JSON.parse(savedDiscounts);
+        setPriceDiscount(discounts.priceDiscount);
+        setMemberDiscount(discounts.memberDiscount);
+        setResellerDiscount(discounts.resellerDiscount);
+      } catch (e) {
+        setPriceDiscount(undefined);
+        setMemberDiscount(undefined);
+        setResellerDiscount(undefined);
+      }
+    } else {
+      setPriceDiscount(undefined);
+      setMemberDiscount(undefined);
+      setResellerDiscount(undefined);
+    }
     setCurrentView('edit');
   };
 
@@ -212,8 +230,24 @@ const AdminDashboard: React.FC = () => {
 
       if (editingItem) {
         await updateMenuItem(editingItem.id, itemData);
+        // Save discount values to localStorage
+        const discounts = {
+          priceDiscount,
+          memberDiscount,
+          resellerDiscount
+        };
+        localStorage.setItem(`amber_discounts_${editingItem.id}`, JSON.stringify(discounts));
       } else {
-        await addMenuItem(itemData as Omit<MenuItem, 'id'>);
+        const newItem = await addMenuItem(itemData as Omit<MenuItem, 'id'>);
+        // Save discount values to localStorage for new item
+        if (newItem && newItem.id) {
+          const discounts = {
+            priceDiscount,
+            memberDiscount,
+            resellerDiscount
+          };
+          localStorage.setItem(`amber_discounts_${newItem.id}`, JSON.stringify(discounts));
+        }
       }
       setCurrentView('items');
       setEditingItem(null);
@@ -624,9 +658,9 @@ const AdminDashboard: React.FC = () => {
             {/* Discount Pricing Section */}
                   <div>
                     <h4 className="text-xs font-playfair font-medium text-black mb-4">Discount</h4>
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-3 gap-4">
                 <div>
-                        <label className="block text-xs font-medium text-black mb-2">Price Discount</label>
+                        <label className="block text-xs font-medium text-black mb-2">Price</label>
                   <input
                     type="number"
                           min="0"
@@ -636,6 +670,13 @@ const AdminDashboard: React.FC = () => {
                           onChange={(e) => {
                             const discount = e.target.value !== '' ? Number(e.target.value) : undefined;
                             setPriceDiscount(discount);
+                            // Save to localStorage
+                            if (editingItem) {
+                              const savedDiscounts = localStorage.getItem(`amber_discounts_${editingItem.id}`);
+                              const discounts = savedDiscounts ? JSON.parse(savedDiscounts) : {};
+                              discounts.priceDiscount = discount;
+                              localStorage.setItem(`amber_discounts_${editingItem.id}`, JSON.stringify(discounts));
+                            }
                             // Apply discount to all price fields
                             if (discount !== undefined && formData.variations) {
                               const updatedVariations = formData.variations.map(v => {
@@ -659,7 +700,47 @@ const AdminDashboard: React.FC = () => {
                 </div>
 
                 <div>
-                        <label className="block text-xs font-medium text-black mb-2">Reseller Discount</label>
+                        <label className="block text-xs font-medium text-black mb-2">Member</label>
+                  <input
+                    type="number"
+                          min="0"
+                          max="1"
+                          step="0.01"
+                          value={memberDiscount !== undefined ? memberDiscount : ''}
+                          onChange={(e) => {
+                            const discount = e.target.value !== '' ? Number(e.target.value) : undefined;
+                            setMemberDiscount(discount);
+                            // Save to localStorage
+                            if (editingItem) {
+                              const savedDiscounts = localStorage.getItem(`amber_discounts_${editingItem.id}`);
+                              const discounts = savedDiscounts ? JSON.parse(savedDiscounts) : {};
+                              discounts.memberDiscount = discount;
+                              localStorage.setItem(`amber_discounts_${editingItem.id}`, JSON.stringify(discounts));
+                            }
+                            // Calculate and apply discounted member price to all member fields
+                            // Use the current price value (original price) to calculate member price
+                            if (discount !== undefined && formData.variations) {
+                              const updatedVariations = formData.variations.map(v => {
+                                // Use the current price as the base for member discount calculation
+                                const basePrice = v.price || 0;
+                                return {
+                                  ...v,
+                                  member_price: basePrice * (1 - discount)
+                                };
+                              });
+                              setFormData({ ...formData, variations: updatedVariations });
+                            }
+                          }}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-black focus:border-transparent text-xs [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                          placeholder="0.10"
+                  />
+                        <p className="text-xs text-gray-500 mt-1">
+                          Calculates discounted member price from original price
+                        </p>
+                </div>
+
+                <div>
+                        <label className="block text-xs font-medium text-black mb-2">Reseller</label>
                   <input
                     type="number"
                           min="0"
@@ -669,6 +750,13 @@ const AdminDashboard: React.FC = () => {
                           onChange={(e) => {
                             const discount = e.target.value !== '' ? Number(e.target.value) : undefined;
                             setResellerDiscount(discount);
+                            // Save to localStorage
+                            if (editingItem) {
+                              const savedDiscounts = localStorage.getItem(`amber_discounts_${editingItem.id}`);
+                              const discounts = savedDiscounts ? JSON.parse(savedDiscounts) : {};
+                              discounts.resellerDiscount = discount;
+                              localStorage.setItem(`amber_discounts_${editingItem.id}`, JSON.stringify(discounts));
+                            }
                             // Calculate and apply discounted reseller price to all reseller fields
                             // Use the current price value (original price) to calculate reseller price
                             if (discount !== undefined && formData.variations) {
@@ -991,7 +1079,7 @@ const AdminDashboard: React.FC = () => {
                                         </div>
 
                                         {/* Pricing Row - All in one row on mobile */}
-                                        <div className="grid grid-cols-2 gap-2 sm:gap-3">
+                                        <div className="grid grid-cols-3 gap-2 sm:gap-3">
                                           {/* Price (default price for customers) */}
                                           <div>
                                             <label className="block text-xs font-medium text-gray-700 mb-1">Price</label>
@@ -1001,6 +1089,23 @@ const AdminDashboard: React.FC = () => {
                                               onChange={(e) => {
                                                 const value = e.target.value === '' ? undefined : Number(e.target.value);
                                                 updateVariation(index, 'price', value);
+                                              }}
+                                              className="w-full px-3 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-green-500 focus:border-transparent text-xs [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                                              placeholder="0"
+                                              min="0"
+                                              step="0.01"
+                                            />
+                                          </div>
+
+                                          {/* Member Price */}
+                                          <div>
+                                            <label className="block text-xs font-medium text-gray-700 mb-1">Member</label>
+                                            <input
+                                              type="number"
+                                              value={variation.member_price !== undefined && variation.member_price !== null ? variation.member_price : ''}
+                                              onChange={(e) => {
+                                                const value = e.target.value === '' ? undefined : Number(e.target.value);
+                                                updateVariation(index, 'member_price', value);
                                               }}
                                               className="w-full px-3 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-green-500 focus:border-transparent text-xs [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                                               placeholder="0"

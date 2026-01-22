@@ -71,7 +71,8 @@ const PaymentMethodManager: React.FC<PaymentMethodManagerProps> = ({ onBack }) =
     icon_url: '',
     active: true,
     sort_order: 0,
-    admin_name: ''
+    admin_name: '',
+    max_order_amount: null as number | null
   });
 
   // Modal state
@@ -189,7 +190,8 @@ const PaymentMethodManager: React.FC<PaymentMethodManagerProps> = ({ onBack }) =
       icon_url: method.icon_url || '',
       active: method.active,
       sort_order: method.sort_order,
-      admin_name: method.admin_name || ''
+      admin_name: method.admin_name || '',
+      max_order_amount: method.max_order_amount || null
     });
     setCurrentView('edit');
   };
@@ -260,6 +262,16 @@ const PaymentMethodManager: React.FC<PaymentMethodManagerProps> = ({ onBack }) =
   const handleCancel = () => {
     setCurrentView('list');
     setEditingMethod(null);
+  };
+
+  const handleToggleMaxOrderAmount = async (method: PaymentMethod) => {
+    try {
+      const newMaxAmount = method.max_order_amount === 6000 ? null : 6000;
+      await updatePaymentMethod(method.uuid_id, { max_order_amount: newMaxAmount });
+      await fetchAllPaymentMethods();
+    } catch (error) {
+      alert('Failed to update max order amount. Please try again.');
+    }
   };
 
   const generateIdFromName = (name: string) => {
@@ -419,6 +431,21 @@ const PaymentMethodManager: React.FC<PaymentMethodManagerProps> = ({ onBack }) =
                 />
                 <p className="text-xs text-gray-500 mt-1">
                   Lower numbers appear first in the checkout
+                </p>
+              </div>
+
+              <div>
+                <label className="block text-xs font-medium text-black mb-2">Max Order Amount (PHP)</label>
+                <input
+                  type="number"
+                  step="0.01"
+                  value={formData.max_order_amount || ''}
+                  onChange={(e) => setFormData({ ...formData, max_order_amount: e.target.value ? parseFloat(e.target.value) : null })}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                  placeholder="6000 (leave empty for no limit)"
+                />
+                <p className="text-xs text-gray-500 mt-1">
+                  Payment method will be hidden if order total is ≥ this amount. Leave empty to show for all orders. Default: 6000
                 </p>
               </div>
 
@@ -610,8 +637,22 @@ const PaymentMethodManager: React.FC<PaymentMethodManagerProps> = ({ onBack }) =
                                 
                                 <div className="flex items-center space-x-2">
                                 <button
+                                  onClick={() => handleToggleMaxOrderAmount(method)}
+                                  className="relative inline-flex items-center focus:outline-none"
+                                  title={method.max_order_amount === 6000 ? 'Hide for orders ≥ ₱6,000 (Click to show for all orders)' : 'Show only for orders < ₱6,000 (Click to enable)'}
+                                >
+                                  <div className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors duration-200 ${
+                                    method.max_order_amount === 6000 ? 'bg-orange-500' : 'bg-gray-300'
+                                  }`}>
+                                    <span className={`inline-block h-3.5 w-3.5 transform rounded-full bg-white transition-transform duration-200 ${
+                                      method.max_order_amount === 6000 ? 'translate-x-5' : 'translate-x-0.5'
+                                    }`} />
+                                  </div>
+                                </button>
+                                <button
                                   onClick={() => handleEditMethod(method)}
                                   className="p-1.5 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded transition-colors duration-200"
+                                  title="Edit"
                                 >
                                   <Edit className="h-4 w-4" />
                                 </button>
@@ -619,6 +660,7 @@ const PaymentMethodManager: React.FC<PaymentMethodManagerProps> = ({ onBack }) =
                                 <button
                                   onClick={() => handleDeleteMethod(method.uuid_id, method.name)}
                                   className="p-1.5 text-red-400 hover:text-red-600 hover:bg-red-50 rounded transition-colors duration-200"
+                                  title="Delete"
                                 >
                                   <Trash2 className="h-4 w-4" />
                                 </button>
@@ -672,8 +714,22 @@ const PaymentMethodManager: React.FC<PaymentMethodManagerProps> = ({ onBack }) =
                     
                     <div className="flex items-center space-x-2">
                       <button
+                        onClick={() => handleToggleMaxOrderAmount(method)}
+                        className="relative inline-flex items-center focus:outline-none"
+                        title={method.max_order_amount === 6000 ? 'Hide for orders ≥ ₱6,000 (Click to show for all orders)' : 'Show only for orders < ₱6,000 (Click to enable)'}
+                      >
+                        <div className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors duration-200 ${
+                          method.max_order_amount === 6000 ? 'bg-orange-500' : 'bg-gray-300'
+                        }`}>
+                          <span className={`inline-block h-3.5 w-3.5 transform rounded-full bg-white transition-transform duration-200 ${
+                            method.max_order_amount === 6000 ? 'translate-x-5' : 'translate-x-0.5'
+                          }`} />
+                        </div>
+                      </button>
+                      <button
                         onClick={() => handleEditMethod(method)}
                         className="p-1.5 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded transition-colors duration-200"
+                        title="Edit"
                       >
                         <Edit className="h-4 w-4" />
                       </button>
@@ -681,10 +737,11 @@ const PaymentMethodManager: React.FC<PaymentMethodManagerProps> = ({ onBack }) =
                       <button
                         onClick={() => handleDeleteMethod(method.uuid_id, method.name)}
                         className="p-1.5 text-red-400 hover:text-red-600 hover:bg-red-50 rounded transition-colors duration-200"
+                        title="Delete"
                       >
                         <Trash2 className="h-4 w-4" />
                       </button>
-                      </div>
+                    </div>
                     </div>
                     
                     {/* Bottom Row: Payment Method Info */}

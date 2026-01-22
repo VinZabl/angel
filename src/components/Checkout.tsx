@@ -77,10 +77,20 @@ const Checkout: React.FC<CheckoutProps> = ({ cartItems, totalPrice, onBack, onNa
     if (paymentMethodId && paymentMethods.length > 0) {
       const savedMethod = paymentMethods.find(m => m.id === paymentMethodId);
       if (savedMethod) {
+        // Check if payment method is still available based on order total
+        if (savedMethod.max_order_amount !== null && savedMethod.max_order_amount !== undefined) {
+          if (totalPrice >= savedMethod.max_order_amount) {
+            // Payment method is hidden due to order total, clear selection
+            setPaymentMethod(null);
+            setPaymentMethodId(null);
+            localStorage.removeItem('amber_checkout_paymentMethodId');
+            return;
+          }
+        }
         setPaymentMethod(savedMethod);
       }
     }
-  }, [paymentMethodId, paymentMethods]);
+  }, [paymentMethodId, paymentMethods, totalPrice]);
 
   // Update paymentMethodId when paymentMethod changes
   React.useEffect(() => {
@@ -92,6 +102,17 @@ const Checkout: React.FC<CheckoutProps> = ({ cartItems, totalPrice, onBack, onNa
       localStorage.removeItem('amber_checkout_paymentMethodId');
     }
   }, [paymentMethod]);
+
+  // Clear selected payment method if it becomes unavailable due to order total
+  React.useEffect(() => {
+    if (paymentMethod && paymentMethod.max_order_amount !== null && paymentMethod.max_order_amount !== undefined) {
+      if (totalPrice >= paymentMethod.max_order_amount) {
+        setPaymentMethod(null);
+        setPaymentMethodId(null);
+        localStorage.removeItem('amber_checkout_paymentMethodId');
+      }
+    }
+  }, [totalPrice, paymentMethod]);
 
   // Save state to localStorage whenever it changes
   React.useEffect(() => {
@@ -1449,7 +1470,7 @@ const Checkout: React.FC<CheckoutProps> = ({ cartItems, totalPrice, onBack, onNa
               {/* Bulk Input Section */}
               {itemsWithCustomFields.length >= 2 && (
                 <div className="mb-6 p-4 glass-strong border border-cafe-primary/30 rounded-lg">
-                  <h3 className="text-lg font-semibold text-cafe-text mb-4">Bulk Input</h3>
+                  <h3 className="text-sm font-semibold text-cafe-text mb-4">Bulk Input</h3>
                   <p className="text-sm text-cafe-textMuted mb-4">
                     Select games and fill fields once for all selected games.
                   </p>
@@ -1488,7 +1509,7 @@ const Checkout: React.FC<CheckoutProps> = ({ cartItems, totalPrice, onBack, onNa
                             type="text"
                             value={bulkInputValues[index.toString()] || ''}
                             onChange={(e) => handleBulkInputChange(index.toString(), e.target.value)}
-                            className="w-full px-4 py-3 glass border border-cafe-primary/30 rounded-lg focus:ring-2 focus:ring-cafe-primary focus:border-cafe-primary transition-all duration-200 text-cafe-text placeholder-cafe-textMuted"
+                            className="w-full px-4 py-3 glass border border-cafe-primary/30 rounded-lg focus:ring-2 focus:ring-cafe-primary focus:border-cafe-primary transition-all duration-200 text-sm text-cafe-text placeholder-cafe-textMuted"
                             placeholder={field?.placeholder || field?.label || `Field ${index + 1}`}
                           />
                         </div>
@@ -1660,7 +1681,17 @@ const Checkout: React.FC<CheckoutProps> = ({ cartItems, totalPrice, onBack, onNa
           </div>
           
           <div className="grid grid-cols-6 gap-1 md:gap-2 mb-6">
-            {paymentMethods.map((method) => (
+            {paymentMethods
+              .filter((method) => {
+                // Filter payment methods based on max_order_amount
+                // If max_order_amount is set (e.g., 6000), only show if order total is less than that amount
+                if (method.max_order_amount !== null && method.max_order_amount !== undefined) {
+                  return totalPrice < method.max_order_amount;
+                }
+                // If no max_order_amount is set, show for all orders
+                return true;
+              })
+              .map((method) => (
               <button
                 key={method.id}
                 type="button"
