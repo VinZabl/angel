@@ -395,7 +395,7 @@ const MenuItemCard: React.FC<MenuItemCardProps> = ({
                               })}
                             </div>
 
-                            {/* Divider between categories - Diginix accent */}
+                            {/* Divider between categories */}
                             {categoryIndex < sortedCategories.length - 1 && (
                               <div className="border-t border-cafe-primary/20 my-4"></div>
                             )}

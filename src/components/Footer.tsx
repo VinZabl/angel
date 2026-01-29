@@ -12,10 +12,10 @@ const Footer: React.FC = () => {
     { icon: Youtube, url: siteSettings?.footer_social_4, label: 'YouTube' },
   ].filter(link => link.url && link.url.trim() !== '');
 
-  // Footer link columns - can be made configurable through site settings later
+  // Footer link columns - website brand always "Angel Game Credits"
   const footerColumns = [
     {
-      title: siteSettings?.site_name || 'Diginix',
+      title: 'Angel Game Credits',
       links: [
         { label: siteSettings?.site_description || 'Your Perfect Game Credits Destination', url: '#' },
       ]
@@ -108,7 +108,7 @@ const Footer: React.FC = () => {
           {/* Copyright - Centered at the bottom */}
           <div className="flex flex-col items-center gap-2">
             <p className="text-sm text-cafe-textMuted text-center">
-              © 2026 {siteSettings?.site_name || 'Angel Game Credits'}. All rights reserved.
+              © 2026 Angel Game Credits. All rights reserved.
             </p>
             <p className="text-xs text-cafe-textMuted text-center max-w-2xl">
               Not endorsed by or affiliated with the copyright holders. All trademarks remain the property of their respective owners.
