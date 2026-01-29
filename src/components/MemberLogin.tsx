@@ -102,7 +102,7 @@ const MemberLogin: React.FC<MemberLoginProps> = ({ onBack, onLoginSuccess }) => 
           </div>
 
           {error && (
-            <div className="mb-4 p-3 glass-strong border border-red-500/30 rounded-lg text-red-200 text-sm">
+            <div className="mb-4 p-3 glass-strong border border-red-500/30 rounded-lg text-red-700 text-sm bg-red-50/80">
               {error}
             </div>
           )}

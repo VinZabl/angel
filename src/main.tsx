@@ -6,9 +6,9 @@ import './index.css';
 
 function EnvConfigMessage() {
   return (
-    <div className="min-h-screen bg-[#0A0A0A] flex items-center justify-center p-6 text-center">
-      <div className="max-w-md text-white">
-        <h1 className="text-xl font-bold text-white mb-4">Trish Devion</h1>
+    <div className="min-h-screen theme-page-bg flex items-center justify-center p-6 text-center">
+      <div className="max-w-md text-cafe-text">
+        <h1 className="text-xl font-bold text-cafe-text mb-4">Angel Game Credits</h1>
         <p className="text-cafe-textMuted mb-4">
           Configure environment variables to run this app.
         </p>

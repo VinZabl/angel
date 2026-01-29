@@ -58,13 +58,13 @@ const MemberProfile: React.FC<MemberProfileProps> = ({ onClose, onLogout }) => {
   const getOrderStatusClass = (order: Order) => {
     const displayStatus = getOrderStatus(order);
     if (displayStatus === 'Done via Messenger' || displayStatus === 'approved') {
-      return 'bg-green-500/20 text-green-300';
+      return 'bg-green-100 text-green-800 border border-green-200';
     } else if (displayStatus === 'rejected') {
-      return 'bg-red-500/20 text-red-300';
+      return 'bg-red-100 text-red-800 border border-red-200';
     } else if (displayStatus === 'processing') {
-      return 'bg-yellow-500/20 text-yellow-300';
+      return 'bg-amber-100 text-amber-800 border border-amber-200';
     } else {
-      return 'bg-gray-500/20 text-gray-300';
+      return 'bg-gray-100 text-gray-700 border border-gray-200';
     }
   };
 

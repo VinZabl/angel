@@ -2,28 +2,28 @@
 @tailwind components;
 @tailwind utilities;
 
-/* In-Game Credits Theme Styles */
-/* Glassmorphism utilities */
+/* Angel Game Credits Theme Styles */
+/* Glass / surface utilities (light theme) */
 .glass {
-  background: rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.7);
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  border: 1px solid rgba(124, 58, 237, 0.2);
 }
 
 .glass-strong {
-  background: rgba(255, 255, 255, 0.15);
+  background: rgba(255, 255, 255, 0.85);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
-  border: 1px solid rgba(255, 255, 255, 0.3);
+  border: 1px solid rgba(124, 58, 237, 0.25);
 }
 
 .glass-card {
-  background: rgba(10, 10, 10, 0.75);
+  background: #FFFFFF;
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
-  border: 1px solid rgba(185, 28, 28, 0.3);
-  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+  border: 1px solid rgba(124, 58, 237, 0.2);
+  box-shadow: 0 4px 24px rgba(124, 58, 237, 0.08), 0 2px 8px rgba(0, 0, 0, 0.04);
 }
 
 .glass-hover {
@@ -31,9 +31,9 @@
 }
 
 .glass-hover:hover {
-  background: rgba(255, 255, 255, 0.2);
-  border-color: rgba(185, 28, 28, 0.5);
-  box-shadow: 0 8px 32px 0 rgba(185, 28, 28, 0.2);
+  background: rgba(255, 255, 255, 0.9);
+  border-color: rgba(124, 58, 237, 0.4);
+  box-shadow: 0 8px 32px rgba(124, 58, 237, 0.12);
 }
 
 .package-card-hover {
@@ -41,9 +41,9 @@
 }
 
 .package-card-hover:hover {
-  background: #B91C1C !important;
-  border: 2px solid #B91C1C !important;
-  box-shadow: 0 4px 12px 0 rgba(185, 28, 28, 0.4) !important;
+  background: #7C3AED !important;
+  border: 2px solid #7C3AED !important;
+  box-shadow: 0 4px 16px rgba(124, 58, 237, 0.35) !important;
   transform: scale(1.02) !important;
 }
 
@@ -54,50 +54,50 @@
   color: white !important;
 }
 
-/* Trish Devion glow effects */
+/* Purple glow effects */
 .glow-blue {
-  box-shadow: 0 0 20px rgba(185, 28, 28, 0.5);
+  box-shadow: 0 0 20px rgba(124, 58, 237, 0.4);
 }
 
 .glow-blue-strong {
-  box-shadow: 0 0 30px rgba(185, 28, 28, 0.8);
+  box-shadow: 0 0 30px rgba(124, 58, 237, 0.5);
 }
 
 .text-glow {
-  text-shadow: 0 0 10px rgba(185, 28, 28, 0.8);
+  text-shadow: 0 0 10px rgba(124, 58, 237, 0.3);
 }
 
-/* Legacy cafe color helpers (Trish Devion red) */
+/* Angel Game Credits color helpers */
 .bg-cafe-cream {
-  background-color: #1a0a0a;
+  background-color: #FAF9F6;
 }
 
 .bg-cafe-beige {
-  background-color: #141414;
+  background-color: #F5F3F0;
 }
 
 .bg-cafe-light {
-  background-color: rgba(255, 255, 255, 0.1);
+  background-color: rgba(255, 255, 255, 0.8);
 }
 
 .text-cafe-accent {
-  color: #B91C1C;
+  color: #7C3AED;
 }
 
 .text-cafe-dark {
-  color: #E0F2FE;
+  color: #1F2937;
 }
 
 .border-cafe-accent {
-  border-color: #B91C1C;
+  border-color: #7C3AED;
 }
 
 .border-cafe-latte {
-  border-color: rgba(185, 28, 28, 0.3);
+  border-color: rgba(124, 58, 237, 0.25);
 }
 
 .ring-cafe-accent {
-  --tw-ring-color: #B91C1C;
+  --tw-ring-color: #7C3AED;
 }
 
 /* Hide scrollbar for mobile nav */
@@ -183,9 +183,9 @@ img {
   animation-delay: 4s;
 }
 
-/* Trish Devion: off-black background + background.jpg at 20% opacity */
+/* Angel Game Credits: off-white background + optional subtle overlay */
 .theme-page-bg {
-  background-color: #0A0A0A;
+  background-color: #FAF9F6;
   position: relative;
 }
 
@@ -198,19 +198,25 @@ img {
   bottom: 0;
   width: 100%;
   height: 100%;
-  background-image: url('/background.jpg');
-  background-size: cover;
+  background-image: url('/logo.png');
+  background-size: contain;
   background-position: center;
   background-repeat: no-repeat;
-  opacity: 0.2;
+  opacity: 0.08;
   pointer-events: none;
   z-index: 0;
 }
 
-/* Content above background - exclude sticky bar, modals, and fixed-position elements */
-.theme-page-bg > *:not(.sticky-nav-bar):not(.modal-overlay):not(.floating-support-btn) {
+/* Content above background - exclude sticky bar, modals, footer, and fixed-position elements */
+.theme-page-bg > *:not(.sticky-nav-bar):not(.modal-overlay):not(.floating-support-btn):not(.theme-footer) {
   position: relative;
   z-index: 1;
+}
+
+/* Footer stays above background but behind modals (which live inside content) */
+.theme-footer {
+  position: relative;
+  z-index: 0;
 }
 
 /* Legacy: logo overlay (e.g. login page) */

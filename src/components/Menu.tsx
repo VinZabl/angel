@@ -214,7 +214,7 @@ const Menu: React.FC<MenuProps> = ({ menuItems, addToCart, cartItems, updateQuan
         {/* Welcome back card - Mobile only */}
         {currentMember && (
           <div className="mb-4 md:hidden flex justify-center">
-            <div className="glass-card rounded-lg px-3 py-2 inline-block">
+            <div className="glass-card rounded-lg px-3 py-2 inline-block border border-cafe-primary/20">
               <div className="flex items-center justify-center">
                 <p className="text-sm text-cafe-text">
                   <span className="text-cafe-textMuted">Welcome back,</span> <span className="font-semibold ml-2">{currentMember.username}</span>
@@ -260,7 +260,7 @@ const Menu: React.FC<MenuProps> = ({ menuItems, addToCart, cartItems, updateQuan
         {/* Welcome back card - Mobile only */}
         {currentMember && (
           <div className="mb-4 md:hidden flex justify-center">
-            <div className="glass-card rounded-lg px-3 py-2 inline-block">
+            <div className="glass-card rounded-lg px-3 py-2 inline-block border border-cafe-primary/20">
               <div className="flex items-center justify-center">
                 <p className="text-sm text-cafe-text">
                   <span className="text-cafe-textMuted">Welcome back,</span> <span className="font-semibold ml-2">{currentMember.username}</span>

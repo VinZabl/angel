@@ -54,7 +54,7 @@ const Footer: React.FC = () => {
   ];
 
   return (
-    <footer className="mt-16 bg-cafe-darkBg">
+    <footer className="theme-footer mt-16 bg-white border-t border-cafe-primary/15">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12">
         {/* Top Section - Multi-column Links */}
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-8 mb-8">
@@ -68,7 +68,7 @@ const Footer: React.FC = () => {
                   <li key={linkIndex}>
                     <a
                       href={link.url}
-                      className="text-xs text-cafe-textMuted hover:text-cafe-text transition-colors duration-200"
+                      className="text-xs text-cafe-textMuted hover:text-cafe-primary transition-colors duration-200"
                     >
                       {link.label}
                     </a>
@@ -95,7 +95,7 @@ const Footer: React.FC = () => {
                     href={link.url}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="p-2 rounded-full glass hover:glass-strong transition-all duration-200 text-cafe-text hover:text-cafe-primary"
+                    className="p-2 rounded-full bg-cafe-primary/10 text-cafe-primary hover:bg-cafe-primary hover:text-white transition-all duration-200"
                     aria-label={link.label}
                   >
                     <Icon className="h-5 w-5" />
@@ -108,7 +108,7 @@ const Footer: React.FC = () => {
           {/* Copyright - Centered at the bottom */}
           <div className="flex flex-col items-center gap-2">
             <p className="text-sm text-cafe-textMuted text-center">
-              © 2026 {siteSettings?.site_name || 'Diginix'}. All rights reserved.
+              © 2026 {siteSettings?.site_name || 'Angel Game Credits'}. All rights reserved.
             </p>
             <p className="text-xs text-cafe-textMuted text-center max-w-2xl">
               Not endorsed by or affiliated with the copyright holders. All trademarks remain the property of their respective owners.

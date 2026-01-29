@@ -38,6 +38,7 @@ export const useSiteSettings = () => {
         hero_image_3: data.find(s => s.id === 'hero_image_3')?.value || '',
         hero_image_4: data.find(s => s.id === 'hero_image_4')?.value || '',
         hero_image_5: data.find(s => s.id === 'hero_image_5')?.value || '',
+        checkout_policy_message: data.find(s => s.id === 'checkout_policy_message')?.value || '',
       };
 
       setSiteSettings(settings);

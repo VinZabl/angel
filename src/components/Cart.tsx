@@ -258,14 +258,13 @@ const Cart: React.FC<CartProps> = ({
       <div className="glass-card rounded-xl p-4 flex-shrink-0" style={{ paddingBottom: 'max(1.5rem, env(safe-area-inset-bottom))' }}>
         <div className="flex items-center justify-between text-sm font-semibold text-cafe-text mb-4">
           <span>Total:</span>
-          <span className="text-white">₱{(getTotalPrice() || 0).toFixed(2)}</span>
+          <span className="text-cafe-primary">₱{(getTotalPrice() || 0).toFixed(2)}</span>
         </div>
         
         <div className="flex gap-3">
           <button
             onClick={onContinueShopping}
-            className="flex-1 text-white py-2 rounded-xl hover:opacity-90 transition-all duration-200 transform hover:scale-[1.02] font-medium text-sm border border-white/30"
-            style={{ backgroundColor: 'transparent' }}
+            className="flex-1 text-cafe-primary py-2 rounded-xl border-2 border-cafe-primary hover:bg-cafe-primary/10 transition-all duration-200 transform hover:scale-[1.02] font-medium text-sm"
           >
             Add More
           </button>

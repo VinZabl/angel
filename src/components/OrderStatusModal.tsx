@@ -178,7 +178,7 @@ const OrderStatusModal: React.FC<OrderStatusModalProps> = ({ orderId, isOpen, on
               <div className="mt-4 pt-4 border-t border-cafe-primary/30">
                 <div className="flex items-center justify-between text-xl font-semibold text-cafe-text">
                   <span>Total:</span>
-                  <span className="text-white">₱{order.total_price}</span>
+                  <span className="text-cafe-primary font-semibold">₱{order.total_price}</span>
                 </div>
               </div>
             </div>
@@ -204,7 +204,7 @@ const OrderStatusModal: React.FC<OrderStatusModalProps> = ({ orderId, isOpen, on
         {/* Footer */}
         <div className="mt-6 pt-4 border-t border-cafe-primary/20">
           <p className="text-xs text-cafe-textMuted text-center">
-            Trish Devion
+            Angel Game Credits
           </p>
         </div>
       </div>

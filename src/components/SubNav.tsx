@@ -25,8 +25,8 @@ const SubNav: React.FC<SubNavProps> = ({ selectedCategory, onCategoryClick, sear
             <div className="relative">
               <Search className={`absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 transition-colors duration-200 ${
                 isSearchFocused || searchQuery 
-                  ? 'text-cafe-primary' 
-                  : 'text-cafe-text/60'
+                  ? 'text-white' 
+                  : 'text-cafe-textMuted'
               }`} />
               <input
                 type="text"
@@ -37,14 +37,16 @@ const SubNav: React.FC<SubNavProps> = ({ selectedCategory, onCategoryClick, sear
                 onBlur={() => setIsSearchFocused(false)}
                 className={`w-full pl-10 pr-10 py-1.5 rounded-full text-sm transition-all duration-200 border flex-shrink-0 ${
                   isSearchFocused || searchQuery
-                    ? 'text-white border-transparent bg-cafe-primary'
-                    : 'bg-transparent border-cafe-primary/30 hover:border-cafe-primary hover:bg-cafe-primary/10'
+                    ? 'text-white border-transparent bg-cafe-primary placeholder-white/70'
+                    : 'bg-white/80 border-cafe-primary/25 text-cafe-text placeholder-cafe-textMuted hover:border-cafe-primary/40 hover:bg-white focus:border-cafe-primary focus:ring-2 focus:ring-cafe-primary/20'
                 }`}
               />
               {searchQuery && (
                 <button
                   onClick={() => onSearchChange('')}
-                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-white/80 hover:text-white transition-colors"
+                  className={`absolute right-3 top-1/2 transform -translate-y-1/2 transition-colors ${
+                    isSearchFocused || searchQuery ? 'text-white/80 hover:text-white' : 'text-cafe-textMuted hover:text-cafe-text'
+                  }`}
                 >
                   <X className="h-4 w-4" />
                 </button>
@@ -67,7 +69,7 @@ const SubNav: React.FC<SubNavProps> = ({ selectedCategory, onCategoryClick, sear
                   className={`px-3 py-1.5 rounded-full text-sm transition-all duration-200 border flex-shrink-0 whitespace-nowrap ${
                     selectedCategory === 'all'
                       ? 'text-white border-transparent bg-cafe-primary'
-                      : 'bg-transparent text-cafe-text border-cafe-primary/30 hover:border-cafe-primary hover:bg-white/50'
+                      : 'bg-white/80 text-cafe-text border-cafe-primary/25 hover:border-cafe-primary/50 hover:bg-cafe-primary/5'
                   }`}
                 >
                   All
@@ -78,7 +80,7 @@ const SubNav: React.FC<SubNavProps> = ({ selectedCategory, onCategoryClick, sear
                     className={`px-3 py-1.5 rounded-full text-sm transition-all duration-200 border flex-shrink-0 whitespace-nowrap ${
                       selectedCategory === 'popular'
                         ? 'text-white border-transparent bg-cafe-primary'
-                        : 'bg-transparent text-cafe-text border-cafe-primary/30 hover:border-cafe-primary hover:bg-white/50'
+                        : 'bg-white/80 text-cafe-text border-cafe-primary/25 hover:border-cafe-primary/50 hover:bg-cafe-primary/5'
                     }`}
                   >
                     Popular
@@ -91,7 +93,7 @@ const SubNav: React.FC<SubNavProps> = ({ selectedCategory, onCategoryClick, sear
                     className={`px-3 py-1.5 rounded-full text-sm transition-all duration-200 border flex-shrink-0 whitespace-nowrap ${
                       selectedCategory === c.id
                         ? 'text-white border-transparent bg-cafe-primary'
-                        : 'bg-transparent text-cafe-text border-cafe-primary/30 hover:border-cafe-primary hover:bg-white/50'
+                        : 'bg-white/80 text-cafe-text border-cafe-primary/25 hover:border-cafe-primary/50 hover:bg-cafe-primary/5'
                     }`}
                   >
                     {c.name}

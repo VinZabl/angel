@@ -5,22 +5,22 @@ export default {
     extend: {
       colors: {
         cafe: {
-          // Trish Devion theme: red accents, off-black background
-          accent: '#B91C1C',
-          accent2: '#DC2626',
-          dark: '#0A0A0A',
-          cream: '#F5F5F5',
-          beige: '#E5E5E5',
-          latte: '#D5D5D5',
-          espresso: '#DC2626',
-          light: '#141414',
-          primary: '#B91C1C',   // Crimson red accent
-          secondary: '#DC2626', // Brighter red for gradients/hover
-          darkBg: '#0A0A0A',    // Off-black main background
-          darkCard: '#141414',  // Slightly lighter card background
-          glass: 'rgba(185, 28, 28, 0.1)',
-          text: '#FFFFFF',
-          textMuted: '#B0B0B0'
+          // Angel Game Credits theme: purple accents, off-white background
+          accent: '#7C3AED',
+          accent2: '#8B5CF6',
+          dark: '#1F2937',
+          cream: '#FAF9F6',
+          beige: '#F5F3F0',
+          latte: '#EDE9E5',
+          espresso: '#8B5CF6',
+          light: '#F0EDE8',
+          primary: '#7C3AED',   // Violet-600 accent
+          secondary: '#8B5CF6', // Violet-500 for gradients/hover
+          darkBg: '#FAF9F6',    // Off-white main background
+          darkCard: '#FFFFFF',  // White card surface
+          glass: 'rgba(124, 58, 237, 0.08)',
+          text: '#1F2937',
+          textMuted: '#6B7280'
         }
       },
       fontFamily: {

@@ -16,31 +16,31 @@ const Header: React.FC<HeaderProps> = ({ cartItemsCount, onCartClick, onMenuClic
 
   return (
     <header className="w-full" style={{
-      background: 'rgba(10, 10, 10, 0.55)',
+      background: 'rgba(250, 249, 246, 0.85)',
       backdropFilter: 'blur(14px)',
       WebkitBackdropFilter: 'blur(14px)',
+      borderBottom: '1px solid rgba(124, 58, 237, 0.15)',
     }}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-1.5 md:py-2">
         <div className="flex items-center justify-between min-h-10 md:min-h-12">
           <button 
             onClick={onMenuClick}
-            className="text-white hover:opacity-80 transition-colors duration-200 flex items-center gap-3"
+            className="text-cafe-text hover:text-cafe-primary transition-colors duration-200 flex items-center gap-3"
           >
             <img 
               src="/logo.png" 
-              alt="Trish Devion Logo"
+              alt="Angel Game Credits Logo"
               className="h-10 sm:h-12 md:h-12 w-auto object-contain"
               onError={(e) => {
                 e.currentTarget.style.display = 'none';
               }}
             />
-            <span className="text-base sm:text-lg md:text-lg font-bold text-white whitespace-nowrap">
-              Trish Devion
+            <span className="text-base sm:text-lg md:text-lg font-bold text-cafe-text whitespace-nowrap">
+              Angel Game Credits
             </span>
           </button>
 
           <div className="flex items-center space-x-2">
-            {/* Welcome back text - Desktop only */}
             {currentMember && (
               <div className="hidden md:flex items-center gap-2 mr-2">
                 <p className="text-sm text-cafe-text">
@@ -51,10 +51,10 @@ const Header: React.FC<HeaderProps> = ({ cartItemsCount, onCartClick, onMenuClic
             {onMemberClick && (
               <button 
                 onClick={onMemberClick}
-                className="p-2 text-cafe-text hover:text-cafe-primary hover:bg-cafe-primary/20 rounded-full transition-all duration-200"
+                className="p-2 text-cafe-text hover:text-cafe-primary hover:bg-cafe-primary/15 rounded-full transition-all duration-200"
               >
                 {currentMember?.user_type === 'reseller' ? (
-                  <Coins className="h-6 w-6 text-yellow-500" />
+                  <Coins className="h-6 w-6 text-amber-500" />
                 ) : (
                   <Coins className="h-6 w-6" />
                 )}
@@ -62,7 +62,7 @@ const Header: React.FC<HeaderProps> = ({ cartItemsCount, onCartClick, onMenuClic
             )}
             <button 
               onClick={onCartClick}
-              className="relative p-2 text-white hover:opacity-80 hover:bg-white/10 rounded-full transition-all duration-200"
+              className="relative p-2 text-cafe-text hover:text-cafe-primary hover:bg-cafe-primary/10 rounded-full transition-all duration-200"
             >
               <ShoppingCart className="h-6 w-6" />
               {cartItemsCount > 0 && (

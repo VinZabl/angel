@@ -219,10 +219,10 @@ const MenuItemCard: React.FC<MenuItemCardProps> = ({
         </div>
       </div>
 
-      {/* Item Selection Modal - Diginix branding */}
+      {/* Item Selection Modal - Angel Game Credits branding */}
       {showCustomization && (
-        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-4" onClick={() => setShowCustomization(false)}>
-          <div className="flex flex-col rounded-xl max-w-xl w-full max-h-[85vh] shadow-xl overflow-hidden border border-cafe-primary/30 bg-cafe-darkBg" onClick={(e) => e.stopPropagation()}>
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4" onClick={() => setShowCustomization(false)}>
+          <div className="flex flex-col rounded-xl max-w-xl w-full max-h-[85vh] shadow-xl overflow-hidden border border-cafe-primary/25 bg-white" onClick={(e) => e.stopPropagation()}>
             <div 
               className="flex-shrink-0 p-4 md:p-5 flex items-start justify-between rounded-t-xl relative overflow-hidden" 
               style={{ 
@@ -247,9 +247,9 @@ const MenuItemCard: React.FC<MenuItemCardProps> = ({
                 }}
               />
               
-              {/* Trish Devion red accent */}
+              {/* Purple accent */}
               <div 
-                className="absolute bottom-0 left-0 right-0 h-[2px] bg-cafe-primary/50 rounded-b-xl"
+                className="absolute bottom-0 left-0 right-0 h-[2px] bg-cafe-primary/60 rounded-b-xl"
                 style={{
                   zIndex: 2
                 }}
@@ -276,18 +276,18 @@ const MenuItemCard: React.FC<MenuItemCardProps> = ({
             </div>
 
             <div 
-              className="flex-1 overflow-y-auto min-h-0 relative bg-cafe-darkBg"
+              className="flex-1 overflow-y-auto min-h-0 relative bg-cafe-cream"
               style={{ 
                 WebkitOverflowScrolling: 'touch',
                 overscrollBehavior: 'contain'
               }}
             >
-              {/* Fade-out gradient overlay at top - Diginix dark theme */}
+              {/* Fade-out gradient overlay at top */}
               <div
                 className="sticky top-0 left-0 right-0 z-10 pointer-events-none"
                 style={{
                   height: '32px',
-                  background: 'linear-gradient(to bottom, #0A0A0A 0%, rgba(10, 10, 10, 0.98) 20%, rgba(10, 10, 10, 0.7) 50%, rgba(10, 10, 10, 0.2) 80%, transparent 100%)',
+                  background: 'linear-gradient(to bottom, #FAF9F6 0%, rgba(250, 249, 246, 0.98) 20%, rgba(250, 249, 246, 0.7) 50%, rgba(250, 249, 246, 0.2) 80%, transparent 100%)',
                   marginBottom: '-32px'
                 }}
               />
@@ -338,8 +338,8 @@ const MenuItemCard: React.FC<MenuItemCardProps> = ({
                       <div className="space-y-6 font-sans">
                         {sortedCategories.map((category, categoryIndex) => (
                           <div key={category}>
-                            {/* Category Header - Diginix cyan accent */}
-                            <h4 className="text-base font-bold text-white mb-2 font-sans border-b border-cafe-primary/50 pb-1">{category}</h4>
+                            {/* Category Header */}
+                            <h4 className="text-base font-bold text-cafe-text mb-2 font-sans border-b border-cafe-primary/40 pb-1">{category}</h4>
                             
                             {/* Packages Grid */}
                             <div className="grid grid-cols-2 gap-2">
@@ -354,9 +354,9 @@ const MenuItemCard: React.FC<MenuItemCardProps> = ({
                                   <button
                                     key={variation.id}
                                     onClick={() => handleItemSelect(variation)}
-                                    className="bg-cafe-darkCard border border-cafe-primary/30 rounded-lg p-2.5 text-left group shadow-md relative overflow-hidden transition-all duration-200 hover:border-cafe-primary hover:bg-cafe-primary/10 hover:shadow-[0_0_16px_rgba(185,28,28,0.25)]"
+                                    className="bg-white border border-cafe-primary/25 rounded-lg p-2.5 text-left group shadow-md relative overflow-hidden transition-all duration-200 hover:border-cafe-primary hover:bg-cafe-primary/10 hover:shadow-[0_0_16px_rgba(124,58,237,0.2)]"
                                     style={{
-                                      boxShadow: '0 1px 3px rgba(0, 0, 0, 0.2)'
+                                      boxShadow: '0 1px 3px rgba(124, 58, 237, 0.08)'
                                     }}
                                   >
                                     <div className="flex flex-col">

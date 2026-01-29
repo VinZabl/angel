@@ -17,7 +17,8 @@ const SiteSettingsManager: React.FC = () => {
     footer_social_3: '',
     footer_social_4: '',
     footer_support_url: '',
-    order_option: 'order_via_messenger' as 'order_via_messenger' | 'place_order'
+    order_option: 'order_via_messenger' as 'order_via_messenger' | 'place_order',
+    checkout_policy_message: '',
   });
   const [logoFile, setLogoFile] = useState<File | null>(null);
   const [logoPreview, setLogoPreview] = useState<string>('');
@@ -72,7 +73,8 @@ const SiteSettingsManager: React.FC = () => {
         footer_social_3: siteSettings.footer_social_3 || '',
         footer_social_4: siteSettings.footer_social_4 || '',
         footer_support_url: siteSettings.footer_support_url || '',
-        order_option: siteSettings.order_option || 'order_via_messenger'
+        order_option: siteSettings.order_option || 'order_via_messenger',
+        checkout_policy_message: siteSettings.checkout_policy_message || '',
       });
       setLogoPreview(siteSettings.site_logo);
       setHeroImages({
@@ -154,6 +156,7 @@ const SiteSettingsManager: React.FC = () => {
         footer_social_4: formData.footer_social_4,
         footer_support_url: formData.footer_support_url,
         order_option: formData.order_option,
+        checkout_policy_message: formData.checkout_policy_message,
         hero_image_1: heroImageUrls.hero_image_1,
         hero_image_2: heroImageUrls.hero_image_2,
         hero_image_3: heroImageUrls.hero_image_3,
@@ -172,24 +175,6 @@ const SiteSettingsManager: React.FC = () => {
     } catch (error) {
       console.error('Error saving site settings:', error);
     }
-  };
-
-  const handleCancel = () => {
-    if (siteSettings) {
-      setFormData({
-        site_name: siteSettings.site_name,
-        site_description: siteSettings.site_description,
-        currency: siteSettings.currency,
-        currency_code: siteSettings.currency_code,
-        footer_social_1: siteSettings.footer_social_1 || '',
-        footer_social_2: siteSettings.footer_social_2 || '',
-        footer_social_3: siteSettings.footer_social_3 || '',
-        footer_social_4: siteSettings.footer_social_4 || '',
-        footer_support_url: siteSettings.footer_support_url || ''
-      });
-      setLogoPreview(siteSettings.site_logo);
-    }
-    setLogoFile(null);
   };
 
   // Password change handlers
@@ -308,23 +293,14 @@ const SiteSettingsManager: React.FC = () => {
     <div className="bg-white rounded-xl shadow-sm p-6">
       <div className="flex items-center justify-between mb-6">
         <h2 className="text-black">Site Settings</h2>
-        <div className="flex space-x-2">
-          <button
-            onClick={handleCancel}
-            className="bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition-colors duration-200 flex items-center space-x-2"
-          >
-            <X className="h-4 w-4" />
-            <span>Cancel</span>
-          </button>
-          <button
-            onClick={handleSave}
-            disabled={uploading}
-            className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors duration-200 flex items-center space-x-2 disabled:opacity-50"
-          >
-            <Save className="h-4 w-4" />
-            <span>{uploading ? 'Saving...' : 'Save'}</span>
-          </button>
-        </div>
+        <button
+          onClick={handleSave}
+          disabled={uploading}
+          className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors duration-200 flex items-center space-x-2 disabled:opacity-50"
+        >
+          <Save className="h-4 w-4" />
+          <span>{uploading ? 'Saving...' : 'Save'}</span>
+        </button>
       </div>
 
       <div className="space-y-6">
@@ -516,6 +492,27 @@ const SiteSettingsManager: React.FC = () => {
                 <option value="place_order">Place Order</option>
               </select>
             </div>
+          </div>
+        </div>
+
+        {/* Checkout Policy / Consent Message */}
+        <div className="border-t border-gray-200 pt-6 mt-6">
+          <h3 className="text-xs font-semibold text-black mb-4">Checkout Policy / Consent (Top Up Page)</h3>
+          <p className="text-xs text-gray-600 mb-4">
+            Optional consent message shown when customers click Checkout and land on the Top Up page. They must Accept to continue or Reject to return to cart. Leave blank to skip the policy modal.
+          </p>
+          <div>
+            <label className="block text-xs font-medium text-gray-700 mb-2">
+              Policy / Consent Message
+            </label>
+            <textarea
+              name="checkout_policy_message"
+              value={formData.checkout_policy_message}
+              onChange={handleInputChange}
+              rows={6}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500"
+              placeholder="e.g. By proceeding, you agree to our terms. Payment must be made within 24 hours. Refunds are subject to our policy."
+            />
           </div>
         </div>
 
