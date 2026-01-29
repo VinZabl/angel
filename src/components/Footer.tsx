@@ -17,7 +17,7 @@ const Footer: React.FC = () => {
     {
       title: 'Angel Game Credits',
       links: [
-        { label: siteSettings?.site_description || 'Your Perfect Game Credits Destination', url: '#' },
+        { label: 'Your Perfect Game Credits Destination', url: '#' },
       ]
     },
     {
