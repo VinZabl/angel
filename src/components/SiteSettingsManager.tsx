@@ -203,6 +203,20 @@ const SiteSettingsManager: React.FC<SiteSettingsManagerProps> = ({ onSave }) => 
     }
   }, [uploadImage, updateSiteSettings]);
 
+  // Store handleSave in ref so we can pass a stable wrapper to parent
+  const handleSaveRef = useRef(handleSave);
+  handleSaveRef.current = handleSave;
+  const stableSaveWrapper = useCallback(() => handleSaveRef.current(), []);
+
+  // Expose save handler to parent - only when uploading changes to avoid infinite loop
+  const onSaveRef = useRef(onSave);
+  onSaveRef.current = onSave;
+  useEffect(() => {
+    if (onSaveRef.current) {
+      onSaveRef.current(stableSaveWrapper, uploading);
+    }
+  }, [stableSaveWrapper, uploading]);
+
   // Password change handlers
   const handlePasswordInputChange = (field: keyof typeof passwordData, value: string) => {
     setPasswordData(prev => ({
@@ -299,17 +313,6 @@ const SiteSettingsManager: React.FC<SiteSettingsManagerProps> = ({ onSave }) => 
     setPasswordSuccess('');
     setShowPasswordSection(false);
   };
-
-  // Expose save handler to parent via callback
-  // Expose save handler to parent - only update when handleSave or uploading changes
-  const onSaveRef = useRef(onSave);
-  onSaveRef.current = onSave;
-  
-  useEffect(() => {
-    if (onSaveRef.current) {
-      onSaveRef.current(handleSave, uploading);
-    }
-  }, [handleSave, uploading]);
 
   if (loading) {
     return (
