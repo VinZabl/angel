@@ -1,7 +1,10 @@
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useMemo } from 'react';
 import { CartItem, MenuItem, Variation, AddOn } from '../types';
+import { useMemberAuth } from './useMemberAuth';
 
 export const useCart = () => {
+  const { currentMember, isReseller } = useMemberAuth();
+
   // Load cart items from localStorage on mount
   const [cartItems, setCartItems] = useState<CartItem[]>(() => {
     try {
@@ -25,14 +28,40 @@ export const useCart = () => {
     }
   }, [cartItems]);
 
+  // Effective price for a variation based on member/reseller (same logic as MenuItemCard)
+  const getEffectiveVariationPrice = useCallback((variation?: Variation): number => {
+    if (!variation) return 0;
+    if (isReseller() && currentMember && variation.reseller_price !== undefined && variation.reseller_price !== null) {
+      return variation.reseller_price;
+    }
+    if (currentMember && !isReseller() && currentMember.user_type === 'end_user' && variation.member_price !== undefined && variation.member_price !== null) {
+      return variation.member_price;
+    }
+    return variation.price;
+  }, [currentMember?.id, currentMember?.user_type, isReseller]);
+
+  // Effective unit price for a cart item (used for display and total)
+  const getEffectiveItemPrice = useCallback((cartItem: CartItem): number => {
+    let price = cartItem.basePrice ?? 0;
+    if (cartItem.selectedVariation) {
+      price += getEffectiveVariationPrice(cartItem.selectedVariation);
+    }
+    if (cartItem.selectedAddOns?.length) {
+      cartItem.selectedAddOns.forEach(addOn => {
+        price += (addOn.price ?? 0) * (addOn.quantity ?? 1);
+      });
+    }
+    return price;
+  }, [getEffectiveVariationPrice]);
+
   const calculateItemPrice = (item: MenuItem, variation?: Variation, addOns?: AddOn[]) => {
     let price = item.basePrice;
     if (variation) {
-      price += variation.price;
+      price += getEffectiveVariationPrice(variation);
     }
     if (addOns) {
       addOns.forEach(addOn => {
-        price += addOn.price;
+        price += addOn.price * (addOn.quantity ?? 1);
       });
     }
     return price;
@@ -104,7 +133,7 @@ export const useCart = () => {
         }, ...prev];
       }
     });
-  }, []);
+  }, [getEffectiveVariationPrice]);
 
   const updateQuantity = useCallback((id: string, quantity: number) => {
     if (quantity <= 0) {
@@ -127,9 +156,15 @@ export const useCart = () => {
     setCartItems([]);
   }, []);
 
+  // Cart items with effective totalPrice (member/reseller) so cart and checkout show correct prices
+  const derivedCartItems = useMemo(
+    () => cartItems.map(item => ({ ...item, totalPrice: getEffectiveItemPrice(item) })),
+    [cartItems, getEffectiveItemPrice]
+  );
+
   const getTotalPrice = useCallback(() => {
-    return cartItems.reduce((total, item) => total + (item.totalPrice * item.quantity), 0);
-  }, [cartItems]);
+    return derivedCartItems.reduce((total, item) => total + item.totalPrice * item.quantity, 0);
+  }, [derivedCartItems]);
 
   const getTotalItems = useCallback(() => {
     return cartItems.reduce((total, item) => total + item.quantity, 0);
@@ -139,7 +174,7 @@ export const useCart = () => {
   const closeCart = useCallback(() => setIsCartOpen(false), []);
 
   return {
-    cartItems,
+    cartItems: derivedCartItems,
     isCartOpen,
     addToCart,
     updateQuantity,

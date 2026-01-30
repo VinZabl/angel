@@ -1,10 +1,14 @@
-import React, { useState } from 'react';
-import { Save, Upload, X, Lock, Eye, EyeOff } from 'lucide-react';
+import React, { useState, useCallback, useRef, useEffect } from 'react';
+import { Upload, X, Lock, Eye, EyeOff } from 'lucide-react';
 import { useSiteSettings } from '../hooks/useSiteSettings';
 import { useImageUpload } from '../hooks/useImageUpload';
 import { supabase } from '../lib/supabase';
 
-const SiteSettingsManager: React.FC = () => {
+interface SiteSettingsManagerProps {
+  onSave?: (saveHandler: () => Promise<void>, isUploading: boolean) => void;
+}
+
+const SiteSettingsManager: React.FC<SiteSettingsManagerProps> = ({ onSave }) => {
   const { siteSettings, loading, updateSiteSettings } = useSiteSettings();
   const { uploadImage, uploading } = useImageUpload();
   const [formData, setFormData] = useState({
@@ -19,6 +23,7 @@ const SiteSettingsManager: React.FC = () => {
     footer_support_url: '',
     order_option: 'order_via_messenger' as 'order_via_messenger' | 'place_order',
     checkout_policy_message: '',
+    checkout_policy_enabled: true,
   });
   const [logoFile, setLogoFile] = useState<File | null>(null);
   const [logoPreview, setLogoPreview] = useState<string>('');
@@ -75,6 +80,7 @@ const SiteSettingsManager: React.FC = () => {
         footer_support_url: siteSettings.footer_support_url || '',
         order_option: siteSettings.order_option || 'order_via_messenger',
         checkout_policy_message: siteSettings.checkout_policy_message || '',
+        checkout_policy_enabled: siteSettings.checkout_policy_enabled !== false,
       });
       setLogoPreview(siteSettings.site_logo);
       setHeroImages({
@@ -124,39 +130,59 @@ const SiteSettingsManager: React.FC = () => {
     setHeroFiles(prev => ({ ...prev, [imageKey]: null }));
   };
 
-  const handleSave = async () => {
+  // Use refs to store current values for the save handler
+  const formDataRef = useRef(formData);
+  const logoPreviewRef = useRef(logoPreview);
+  const logoFileRef = useRef(logoFile);
+  const heroImagesRef = useRef(heroImages);
+  const heroFilesRef = useRef(heroFiles);
+
+  // Keep refs updated
+  useEffect(() => {
+    formDataRef.current = formData;
+    logoPreviewRef.current = logoPreview;
+    logoFileRef.current = logoFile;
+    heroImagesRef.current = heroImages;
+    heroFilesRef.current = heroFiles;
+  }, [formData, logoPreview, logoFile, heroImages, heroFiles]);
+
+  const handleSave = useCallback(async () => {
     try {
-      let logoUrl = logoPreview;
+      let logoUrl = logoPreviewRef.current;
       
       // Upload new logo if selected
-      if (logoFile) {
-        const uploadedUrl = await uploadImage(logoFile, 'site-logo');
+      if (logoFileRef.current) {
+        const uploadedUrl = await uploadImage(logoFileRef.current, 'site-logo');
         logoUrl = uploadedUrl;
       }
 
       // Upload hero images if selected
-      const heroImageUrls: Record<string, string> = { ...heroImages };
-      for (const key of Object.keys(heroFiles)) {
-        if (heroFiles[key]) {
-          const uploadedUrl = await uploadImage(heroFiles[key]!, 'hero-images');
+      const heroImageUrls: Record<string, string> = { ...heroImagesRef.current };
+      for (const key of Object.keys(heroFilesRef.current)) {
+        const file = heroFilesRef.current[key as keyof typeof heroFilesRef.current];
+        if (file) {
+          const uploadedUrl = await uploadImage(file, 'hero-images');
           heroImageUrls[key] = uploadedUrl;
         }
       }
 
+      const currentFormData = formDataRef.current;
+      
       // Update all settings
       await updateSiteSettings({
-        site_name: formData.site_name,
-        site_description: formData.site_description,
-        currency: formData.currency,
-        currency_code: formData.currency_code,
+        site_name: currentFormData.site_name,
+        site_description: currentFormData.site_description,
+        currency: currentFormData.currency,
+        currency_code: currentFormData.currency_code,
         site_logo: logoUrl,
-        footer_social_1: formData.footer_social_1,
-        footer_social_2: formData.footer_social_2,
-        footer_social_3: formData.footer_social_3,
-        footer_social_4: formData.footer_social_4,
-        footer_support_url: formData.footer_support_url,
-        order_option: formData.order_option,
-        checkout_policy_message: formData.checkout_policy_message,
+        footer_social_1: currentFormData.footer_social_1,
+        footer_social_2: currentFormData.footer_social_2,
+        footer_social_3: currentFormData.footer_social_3,
+        footer_social_4: currentFormData.footer_social_4,
+        footer_support_url: currentFormData.footer_support_url,
+        order_option: currentFormData.order_option,
+        checkout_policy_message: currentFormData.checkout_policy_message,
+        checkout_policy_enabled: currentFormData.checkout_policy_enabled,
         hero_image_1: heroImageUrls.hero_image_1,
         hero_image_2: heroImageUrls.hero_image_2,
         hero_image_3: heroImageUrls.hero_image_3,
@@ -175,7 +201,7 @@ const SiteSettingsManager: React.FC = () => {
     } catch (error) {
       console.error('Error saving site settings:', error);
     }
-  };
+  }, [uploadImage, updateSiteSettings]);
 
   // Password change handlers
   const handlePasswordInputChange = (field: keyof typeof passwordData, value: string) => {
@@ -274,6 +300,17 @@ const SiteSettingsManager: React.FC = () => {
     setShowPasswordSection(false);
   };
 
+  // Expose save handler to parent via callback
+  // Expose save handler to parent - only update when handleSave or uploading changes
+  const onSaveRef = useRef(onSave);
+  onSaveRef.current = onSave;
+  
+  useEffect(() => {
+    if (onSaveRef.current) {
+      onSaveRef.current(handleSave, uploading);
+    }
+  }, [handleSave, uploading]);
+
   if (loading) {
     return (
       <div className="bg-white rounded-xl shadow-sm p-6">
@@ -291,18 +328,6 @@ const SiteSettingsManager: React.FC = () => {
 
   return (
     <div className="bg-white rounded-xl shadow-sm p-6">
-      <div className="flex items-center justify-between mb-6">
-        <h2 className="text-black">Site Settings</h2>
-        <button
-          onClick={handleSave}
-          disabled={uploading}
-          className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors duration-200 flex items-center space-x-2 disabled:opacity-50"
-        >
-          <Save className="h-4 w-4" />
-          <span>{uploading ? 'Saving...' : 'Save'}</span>
-        </button>
-      </div>
-
       <div className="space-y-6">
         {/* Site Logo */}
         <div>
@@ -499,8 +524,29 @@ const SiteSettingsManager: React.FC = () => {
         <div className="border-t border-gray-200 pt-6 mt-6">
           <h3 className="text-xs font-semibold text-black mb-4">Checkout Policy / Consent (Top Up Page)</h3>
           <p className="text-xs text-gray-600 mb-4">
-            Optional consent message shown when customers click Checkout and land on the Top Up page. They must Accept to continue or Reject to return to cart. Leave blank to skip the policy modal.
+            Optional consent message shown when customers click Checkout and land on the Top Up page. They must Accept to continue or Reject to return to cart. Use the toggle to turn the policy modal on or off without changing the message.
           </p>
+          <div className="flex items-center justify-between gap-4 mb-4 p-3 bg-gray-50 rounded-lg">
+            <label htmlFor="checkout_policy_enabled" className="text-xs font-medium text-gray-700 cursor-pointer">
+              Show policy consent modal at checkout
+            </label>
+            <button
+              type="button"
+              id="checkout_policy_enabled"
+              role="switch"
+              aria-checked={formData.checkout_policy_enabled}
+              onClick={() => setFormData(prev => ({ ...prev, checkout_policy_enabled: !prev.checkout_policy_enabled }))}
+              className={`relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 ${
+                formData.checkout_policy_enabled ? 'bg-red-600' : 'bg-gray-200'
+              }`}
+            >
+              <span
+                className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
+                  formData.checkout_policy_enabled ? 'translate-x-5' : 'translate-x-1'
+                }`}
+              />
+            </button>
+          </div>
           <div>
             <label className="block text-xs font-medium text-gray-700 mb-2">
               Policy / Consent Message

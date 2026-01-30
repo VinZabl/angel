@@ -6,6 +6,7 @@ import ImageUpload from './ImageUpload';
 
 interface PaymentMethodManagerProps {
   onBack: () => void;
+  onSaveSuccess?: () => void;
 }
 
 // Helper component for payment method image with fallback
@@ -27,7 +28,7 @@ const PaymentMethodImage: React.FC<{ qrCodeUrl?: string; name: string }> = ({ qr
   );
 };
 
-const PaymentMethodManager: React.FC<PaymentMethodManagerProps> = ({ onBack }) => {
+const PaymentMethodManager: React.FC<PaymentMethodManagerProps> = ({ onBack, onSaveSuccess }) => {
   const { 
     paymentMethods, 
     adminGroups,
@@ -249,6 +250,7 @@ const PaymentMethodManager: React.FC<PaymentMethodManagerProps> = ({ onBack }) =
       await fetchAllPaymentMethods();
       setCurrentView('list');
       setEditingMethod(null);
+      onSaveSuccess?.();
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Failed to save payment method';
       if (errorMessage.includes('duplicate key') || errorMessage.includes('23505')) {

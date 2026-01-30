@@ -39,6 +39,7 @@ export const useSiteSettings = () => {
         hero_image_4: data.find(s => s.id === 'hero_image_4')?.value || '',
         hero_image_5: data.find(s => s.id === 'hero_image_5')?.value || '',
         checkout_policy_message: data.find(s => s.id === 'checkout_policy_message')?.value || '',
+        checkout_policy_enabled: data.find(s => s.id === 'checkout_policy_enabled')?.value !== 'false',
       };
 
       setSiteSettings(settings);
@@ -74,12 +75,13 @@ export const useSiteSettings = () => {
     try {
       setError(null);
 
-      const updatePromises = Object.entries(updates).map(([key, value]) =>
-        supabase
+      const updatePromises = Object.entries(updates).map(([key, value]) => {
+        const dbValue = typeof value === 'boolean' ? (value ? 'true' : 'false') : (value ?? '');
+        return supabase
           .from('site_settings')
-          .update({ value })
-          .eq('id', key)
-      );
+          .update({ value: dbValue })
+          .eq('id', key);
+      });
 
       const results = await Promise.all(updatePromises);
       

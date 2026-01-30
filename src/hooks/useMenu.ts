@@ -133,6 +133,17 @@ export const useMenu = () => {
 
   const updateMenuItem = async (id: string, updates: Partial<MenuItem>) => {
     try {
+      // Ensure menu item exists before updating (avoids FK violation when inserting variations)
+      const { data: existing, error: fetchError } = await supabase
+        .from('menu_items')
+        .select('id')
+        .eq('id', id)
+        .single();
+
+      if (fetchError || !existing) {
+        throw new Error('Menu item not found. It may have been deleted. Please refresh and try again.');
+      }
+
       // Update menu item
       const { error: itemError } = await supabase
         .from('menu_items')

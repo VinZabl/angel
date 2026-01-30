@@ -110,6 +110,8 @@ export interface SiteSettings {
   hero_image_5?: string;
   // Checkout policy / consent message (Top Up page modal)
   checkout_policy_message?: string;
+  // Toggle to show/hide policy consent modal at checkout (default true when setting exists)
+  checkout_policy_enabled?: boolean;
 }
 
 // Order Types

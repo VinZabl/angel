@@ -4,9 +4,10 @@ import { useCategories, Category } from '../hooks/useCategories';
 
 interface CategoryManagerProps {
   onBack: () => void;
+  onSaveSuccess?: () => void;
 }
 
-const CategoryManager: React.FC<CategoryManagerProps> = ({ onBack }) => {
+const CategoryManager: React.FC<CategoryManagerProps> = ({ onBack, onSaveSuccess }) => {
   const { categories, addCategory, updateCategory, deleteCategory, reorderCategories } = useCategories();
   const [currentView, setCurrentView] = useState<'list' | 'add' | 'edit'>('list');
   const [editingCategory, setEditingCategory] = useState<Category | null>(null);
@@ -70,6 +71,7 @@ const CategoryManager: React.FC<CategoryManagerProps> = ({ onBack }) => {
       }
       setCurrentView('list');
       setEditingCategory(null);
+      onSaveSuccess?.();
     } catch (error) {
       alert(error instanceof Error ? error.message : 'Failed to save category');
     }

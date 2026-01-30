@@ -1960,8 +1960,8 @@ const Checkout: React.FC<CheckoutProps> = ({ cartItems, totalPrice, onBack, onNa
         onSucceededClose={onNavigateToMenu}
       />
 
-      {/* Policy / Consent Modal (Top Up page) – show when admin set message and user has not accepted */}
-      {(siteSettings?.checkout_policy_message || '').trim() && !policyAccepted && (
+      {/* Policy / Consent Modal (Top Up page) – show when enabled, message set, and user has not accepted */}
+      {siteSettings?.checkout_policy_enabled !== false && (siteSettings?.checkout_policy_message || '').trim() && !policyAccepted && (
         <PolicyConsentModal
           message={(siteSettings?.checkout_policy_message || '').trim()}
           onAccept={() => setPolicyAccepted(true)}

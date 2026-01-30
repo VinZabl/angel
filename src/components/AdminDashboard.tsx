@@ -9,6 +9,7 @@ import PaymentMethodManager from './PaymentMethodManager';
 import SiteSettingsManager from './SiteSettingsManager';
 import OrderManager from './OrderManager';
 import MemberManager from './MemberManager';
+import Toast from './Toast';
 import { supabase } from '../lib/supabase';
 import { useSiteSettings } from '../hooks/useSiteSettings';
 
@@ -37,6 +38,16 @@ const AdminDashboard: React.FC = () => {
     }
   };
   const [pendingOrders, setPendingOrders] = useState<number>(0);
+  const [settingsSaveHandler, setSettingsSaveHandler] = useState<(() => Promise<void>) | null>(null);
+  const [settingsUploading, setSettingsUploading] = useState(false);
+  const [showToast, setShowToast] = useState(false);
+  const [toastMessage, setToastMessage] = useState('Saved');
+
+  // Helper function to show toast notification
+  const showSaveToast = (message: string = 'Saved') => {
+    setToastMessage(message);
+    setShowToast(true);
+  };
 
   // Fetch admin password from database on mount
   useEffect(() => {
@@ -271,8 +282,10 @@ const AdminDashboard: React.FC = () => {
       }
       setCurrentView('items');
       setEditingItem(null);
+      showSaveToast();
     } catch (error) {
-      alert('Failed to save item');
+      const message = error instanceof Error ? error.message : 'Failed to save item';
+      alert(message);
     }
   };
 
@@ -2057,23 +2070,70 @@ const AdminDashboard: React.FC = () => {
 
   // Categories View
   if (currentView === 'categories') {
-    return <CategoryManager onBack={() => setCurrentView('dashboard')} />;
+    return (
+      <>
+        {/* Toast Notification */}
+        {showToast && (
+          <Toast
+            message={toastMessage}
+            onClose={() => setShowToast(false)}
+          />
+        )}
+        <CategoryManager
+          onBack={() => setCurrentView('dashboard')}
+          onSaveSuccess={showSaveToast}
+        />
+      </>
+    );
   }
 
   // Members View
   if (currentView === 'members') {
-    return <MemberManager onBack={() => setCurrentView('dashboard')} />;
+    return (
+      <>
+        {/* Toast Notification */}
+        {showToast && (
+          <Toast
+            message={toastMessage}
+            onClose={() => setShowToast(false)}
+          />
+        )}
+        <MemberManager onBack={() => setCurrentView('dashboard')} />
+      </>
+    );
   }
 
   // Payment Methods View
   if (currentView === 'payments') {
-    return <PaymentMethodManager onBack={() => setCurrentView('dashboard')} />;
+    return (
+      <>
+        {/* Toast Notification */}
+        {showToast && (
+          <Toast
+            message={toastMessage}
+            onClose={() => setShowToast(false)}
+          />
+        )}
+        <PaymentMethodManager
+          onBack={() => setCurrentView('dashboard')}
+          onSaveSuccess={showSaveToast}
+        />
+      </>
+    );
   }
 
   // Site Settings View
   if (currentView === 'settings') {
     return (
       <div className="min-h-screen bg-gray-50">
+        {/* Toast Notification */}
+        {showToast && (
+          <Toast
+            message={toastMessage}
+            onClose={() => setShowToast(false)}
+          />
+        )}
+
         <div className="sticky top-0 z-40 bg-white shadow-sm border-b">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="flex items-center justify-between h-16">
@@ -2087,12 +2147,30 @@ const AdminDashboard: React.FC = () => {
                 </button>
                 <h1 className="text-black">Site Settings</h1>
               </div>
+              <button
+                onClick={async () => {
+                  if (settingsSaveHandler) {
+                    await settingsSaveHandler();
+                    showSaveToast();
+                  }
+                }}
+                disabled={settingsUploading || !settingsSaveHandler}
+                className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors duration-200 flex items-center space-x-2 disabled:opacity-50"
+              >
+                <Save className="h-4 w-4" />
+                <span>{settingsUploading ? 'Saving...' : 'Save'}</span>
+              </button>
             </div>
           </div>
         </div>
 
         <div className="max-w-4xl mx-auto px-4 py-8">
-          <SiteSettingsManager />
+          <SiteSettingsManager 
+            onSave={(handler, uploading) => {
+              setSettingsSaveHandler(() => handler);
+              setSettingsUploading(uploading);
+            }}
+          />
         </div>
       </div>
     );
@@ -2102,6 +2180,14 @@ const AdminDashboard: React.FC = () => {
   if (currentView === 'orders') {
     return (
       <div className="min-h-screen bg-gray-50">
+        {/* Toast Notification */}
+        {showToast && (
+          <Toast
+            message={toastMessage}
+            onClose={() => setShowToast(false)}
+          />
+        )}
+
         <div className="sticky top-0 z-40 bg-white shadow-sm border-b">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="flex items-center justify-between h-16">
@@ -2130,6 +2216,14 @@ const AdminDashboard: React.FC = () => {
   // Dashboard View
   return (
     <div className="min-h-screen bg-gray-50">
+      {/* Toast Notification */}
+      {showToast && (
+        <Toast
+          message={toastMessage}
+          onClose={() => setShowToast(false)}
+        />
+      )}
+
       <div className="sticky top-0 z-40 bg-white shadow-sm border-b">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
