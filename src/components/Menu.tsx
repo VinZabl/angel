@@ -115,6 +115,17 @@ const Menu: React.FC<MenuProps> = ({ menuItems, addToCart, cartItems, updateQuan
     return () => window.removeEventListener('scroll', handleScroll);
   }, [categories, selectedCategory]);
 
+  // Hero images for slideshow - must run before any conditional returns (Rules of Hooks)
+  const heroImages = React.useMemo(() => {
+    if (!siteSettings || selectedCategory !== 'all') return [];
+    return [
+      siteSettings.hero_image_1,
+      siteSettings.hero_image_2,
+      siteSettings.hero_image_3,
+      siteSettings.hero_image_4,
+      siteSettings.hero_image_5,
+    ].filter(img => img && img.trim() !== '');
+  }, [siteSettings, selectedCategory]);
 
   // Helper function to render menu items
   const renderMenuItems = (items: MenuItem[]) => {
@@ -240,18 +251,6 @@ const Menu: React.FC<MenuProps> = ({ menuItems, addToCart, cartItems, updateQuan
   // If viewing "All", also show Popular section at the top (only when not searching)
   const popularItems = menuItems.filter(item => Boolean(item.popular) === true);
   const showPopularSection = selectedCategory === 'all' && popularItems.length > 0 && searchQuery.trim() === '';
-
-  // Get hero images for slideshow (only show on "All" category)
-  const heroImages = React.useMemo(() => {
-    if (!siteSettings || selectedCategory !== 'all') return [];
-    return [
-      siteSettings.hero_image_1,
-      siteSettings.hero_image_2,
-      siteSettings.hero_image_3,
-      siteSettings.hero_image_4,
-      siteSettings.hero_image_5,
-    ].filter(img => img && img.trim() !== '');
-  }, [siteSettings, selectedCategory]);
 
   return (
     <>
