@@ -263,7 +263,7 @@ const MenuItemCard: React.FC<MenuItemCardProps> = ({
                     <p className="text-sm text-white/95 italic mt-1 drop-shadow-md">{item.subtitle}</p>
                 )}
                 {item.description && (
-                    <p className="text-sm text-white/90 mt-2 drop-shadow-md whitespace-pre-line break-words">{item.description}</p>
+                    <p className="text-sm text-white/90 mt-2 drop-shadow-md whitespace-normal break-words">{item.description}</p>
                 )}
               </div>
               <button

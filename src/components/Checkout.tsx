@@ -1391,9 +1391,10 @@ const Checkout: React.FC<CheckoutProps> = ({ cartItems, totalPrice, onBack, onNa
       <div className="flex items-center justify-center mb-8 relative">
         <button
           onClick={onBack}
-          className="flex items-center text-cafe-textMuted hover:text-cafe-primary transition-colors duration-200 absolute left-0"
+          className="flex items-center gap-1.5 text-cafe-textMuted hover:text-cafe-primary transition-colors duration-200 absolute left-0"
         >
           <ArrowLeft className="h-5 w-5" />
+          <span className="text-sm font-medium">Back</span>
         </button>
         <h1 className="text-2xl font-semibold text-cafe-text">Top Up</h1>
       </div>
