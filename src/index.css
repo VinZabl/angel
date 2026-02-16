@@ -183,9 +183,9 @@ img {
   animation-delay: 4s;
 }
 
-/* Angel Game Credits: off-white background + optional subtle overlay */
+/* Angel Game Credits: black background + optional subtle overlay */
 .theme-page-bg {
-  background-color: #FAF9F6;
+  background-color: #000000;
   position: relative;
 }
 
@@ -202,7 +202,7 @@ img {
   background-size: contain;
   background-position: center;
   background-repeat: no-repeat;
-  opacity: 0.08;
+  opacity: 0.05;
   pointer-events: none;
   z-index: 0;
 }

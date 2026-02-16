@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { X } from 'lucide-react';
 import { MenuItem, Variation } from '../types';
 import { useMemberAuth } from '../hooks/useMemberAuth';
@@ -146,33 +147,29 @@ const MenuItemCard: React.FC<MenuItemCardProps> = ({
     <>
       <div 
         onClick={handleCardClick}
-        className={`relative flex flex-col transition-all duration-300 group rounded-lg overflow-hidden ${!item.available ? 'opacity-60 cursor-not-allowed' : 'cursor-pointer'}`}
+        className={`relative flex flex-col transition-all duration-300 group rounded-xl overflow-hidden bg-transparent ${!item.available ? 'opacity-60 cursor-not-allowed' : 'cursor-pointer'}`}
         style={{
-          border: '1px solid rgba(185, 28, 28, 0.3)',
-          boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
+          border: '2px solid rgb(124, 58, 237)',
+          boxShadow: '0 2px 6px rgba(124, 58, 237, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.6)',
         }}
         onMouseEnter={(e) => {
           if (item.available) {
-            e.currentTarget.style.borderColor = 'rgba(185, 28, 28, 0.6)';
-            e.currentTarget.style.boxShadow = '0 0 20px rgba(185, 28, 28, 0.4), 0 8px 32px 0 rgba(0, 0, 0, 0.37)';
+            e.currentTarget.style.boxShadow = '0 4px 12px rgba(124, 58, 237, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.6)';
           }
         }}
         onMouseLeave={(e) => {
-          if (item.available) {
-            e.currentTarget.style.borderColor = 'rgba(185, 28, 28, 0.3)';
-            e.currentTarget.style.boxShadow = '0 4px 6px rgba(0, 0, 0, 0.1)';
-          }
+          e.currentTarget.style.boxShadow = '0 2px 6px rgba(124, 58, 237, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.6)';
         }}
       >
         {/* Closed Text Overlay for unavailable items */}
         {!item.available && (
-          <div className="absolute inset-0 bg-black/60 flex items-center justify-center rounded-t-lg z-10">
+          <div className="absolute inset-0 bg-black/60 flex items-center justify-center rounded-t-xl z-10">
             <span className="text-white font-bold text-sm sm:text-base opacity-90 font-sans">Closed</span>
           </div>
         )}
         
-        {/* Game Icon - compact aspect */}
-        <div className="relative w-full aspect-[4/3] overflow-hidden rounded-t-lg bg-gradient-to-br from-cafe-darkCard to-cafe-darkBg transition-transform duration-300 group-hover:scale-105">
+        {/* Game Image - top ~75% of card */}
+        <div className="relative w-full aspect-square overflow-hidden rounded-t-xl bg-transparent transition-transform duration-300 group-hover:scale-[1.02]">
           {item.image ? (
             <img
               src={item.image}
@@ -186,42 +183,41 @@ const MenuItemCard: React.FC<MenuItemCardProps> = ({
               }}
             />
           ) : null}
-          <div className={`absolute inset-0 flex items-center justify-center ${item.image ? 'hidden' : ''}`}>
-            <div className="text-2xl opacity-20 text-gray-400">🎮</div>
+          <div className={`absolute inset-0 flex items-center justify-center bg-transparent ${item.image ? 'hidden' : ''}`}>
+            <div className="text-2xl opacity-30 text-gray-400">🎮</div>
           </div>
-          {/* Game Title + Subtitle Overlay on Icon */}
-          <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/90 via-black/60 to-transparent pt-5 pb-1.5 px-1.5">
-            <h4 
-              ref={nameRef}
-              className={`text-white font-bold text-xs sm:text-sm text-center line-clamp-2 ${
-                shouldScroll ? 'animate-scroll-text' : ''
-              }`}
-              style={shouldScroll ? {
-                display: 'inline-block',
-              } : {}}
-            >
-              {shouldScroll ? (
-                <>
-                  <span>{item.name}</span>
-                  <span className="mx-4">•</span>
-                  <span>{item.name}</span>
-                </>
-              ) : (
-                item.name
-              )}
-            </h4>
-            {item.subtitle ? (
-              <p className="text-[10px] sm:text-xs text-white/80 text-center mt-0.5 truncate px-0.5">
-                {item.subtitle}
-              </p>
-            ) : null}
-          </div>
+        </div>
+
+        {/* Game Title - bottom section, centered */}
+        <div className="flex-1 min-h-[44px] flex flex-col items-center justify-center px-2 py-2 bg-transparent rounded-b-xl font-sans">
+          <h4 
+            ref={nameRef}
+            className={`font-bold text-[8px] sm:text-[10px] text-white text-center line-clamp-2 leading-tight ${
+              shouldScroll ? 'animate-scroll-text' : ''
+            }`}
+            style={shouldScroll ? { display: 'inline-block' } : undefined}
+          >
+            {shouldScroll ? (
+              <>
+                <span>{item.name}</span>
+                <span className="mx-4">•</span>
+                <span>{item.name}</span>
+              </>
+            ) : (
+              item.name
+            )}
+          </h4>
+          {item.subtitle ? (
+            <p className="text-[7px] sm:text-[8px] text-white/80 text-center mt-0.5 line-clamp-2 w-full font-sans">
+              {item.subtitle}
+            </p>
+          ) : null}
         </div>
       </div>
 
-      {/* Item Selection Modal - Angel Game Credits branding */}
-      {showCustomization && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4" onClick={() => setShowCustomization(false)}>
+      {/* Item Selection Modal - rendered via portal so it appears above header/nav */}
+      {showCustomization && createPortal(
+        <div className="fixed inset-0 z-[9999] bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 modal-overlay" onClick={() => setShowCustomization(false)}>
           <div className="flex flex-col rounded-xl max-w-xl w-full max-h-[85vh] shadow-xl overflow-hidden border border-cafe-primary/25 bg-white" onClick={(e) => e.stopPropagation()}>
             <div 
               className="flex-shrink-0 p-4 md:p-5 flex items-start justify-between rounded-t-xl relative overflow-hidden" 
@@ -412,7 +408,8 @@ const MenuItemCard: React.FC<MenuItemCardProps> = ({
               </div>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </>
   );

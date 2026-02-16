@@ -54,13 +54,13 @@ const Footer: React.FC = () => {
   ];
 
   return (
-    <footer className="theme-footer mt-16 bg-white border-t border-cafe-primary/15">
+    <footer className="theme-footer mt-16 bg-black/80 border-t border-cafe-primary/30">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12">
         {/* Top Section - Multi-column Links */}
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-8 mb-8">
           {footerColumns.map((column, index) => (
             <div key={index} className="flex flex-col">
-              <h4 className="text-sm font-bold text-cafe-text uppercase mb-4 font-montserrat">
+              <h4 className="text-sm font-bold text-white uppercase mb-4 font-montserrat">
                 {column.title}
               </h4>
               <ul className="space-y-2">
@@ -68,7 +68,7 @@ const Footer: React.FC = () => {
                   <li key={linkIndex}>
                     <a
                       href={link.url}
-                      className="text-xs text-cafe-textMuted hover:text-cafe-primary transition-colors duration-200"
+                      className="text-xs text-white/70 hover:text-cafe-primary transition-colors duration-200"
                     >
                       {link.label}
                     </a>
@@ -80,7 +80,7 @@ const Footer: React.FC = () => {
         </div>
 
         {/* Separator Line */}
-        <div id="footer-separator" className="border-t border-cafe-primary/20 my-8"></div>
+        <div id="footer-separator" className="border-t border-white/20 my-8"></div>
 
         {/* Bottom Section - Social Media & Copyright */}
         <div className="flex flex-col items-center gap-6">
@@ -107,10 +107,10 @@ const Footer: React.FC = () => {
 
           {/* Copyright - Centered at the bottom */}
           <div className="flex flex-col items-center gap-2">
-            <p className="text-sm text-cafe-textMuted text-center">
+            <p className="text-sm text-white/70 text-center">
               © 2026 Angel Game Credits. All rights reserved.
             </p>
-            <p className="text-xs text-cafe-textMuted text-center max-w-2xl">
+            <p className="text-xs text-white/60 text-center max-w-2xl">
               Not endorsed by or affiliated with the copyright holders. All trademarks remain the property of their respective owners.
             </p>
           </div>

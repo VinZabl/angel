@@ -16,7 +16,7 @@ export default {
           light: '#F0EDE8',
           primary: '#7C3AED',   // Violet-600 accent
           secondary: '#8B5CF6', // Violet-500 for gradients/hover
-          darkBg: '#FAF9F6',    // Off-white main background
+          darkBg: '#000000',    // Black main background
           darkCard: '#FFFFFF',  // White card surface
           glass: 'rgba(124, 58, 237, 0.08)',
           text: '#1F2937',
