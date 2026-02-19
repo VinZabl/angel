@@ -118,8 +118,8 @@ const Cart: React.FC<CartProps> = ({
           <div className="mb-4 flex justify-center">
             <img src="/logo.png" alt="Logo" className="h-24 w-24 md:h-32 md:w-32 object-contain" />
           </div>
-          <h2 className="text-2xl font-medium text-cafe-text mb-2">Your cart is empty</h2>
-          <p className="text-cafe-textMuted mb-6">Add some currency packages to get started!</p>
+          <h2 className="text-2xl font-medium text-white mb-2">Your cart is empty</h2>
+          <p className="text-gray-300 mb-6">Add some currency packages to get started!</p>
           <button
             onClick={onContinueShopping}
             className="text-white px-6 py-3 rounded-full bg-cafe-primary hover:bg-cafe-secondary hover:opacity-90 transition-all duration-200"
@@ -137,12 +137,12 @@ const Cart: React.FC<CartProps> = ({
         <button
           onClick={onContinueShopping}
           aria-label="Back"
-          className="flex items-center gap-1.5 text-cafe-textMuted hover:text-cafe-primary transition-colors duration-200 absolute left-0"
+          className="flex items-center gap-1.5 text-gray-300 hover:text-white transition-colors duration-200 absolute left-0"
         >
           <ArrowLeft className="h-5 w-5" />
           <span className="text-sm font-medium">Back</span>
         </button>
-        <h1 className="text-2xl font-semibold text-cafe-text whitespace-nowrap">Cart</h1>
+        <h1 className="text-2xl font-semibold text-white whitespace-nowrap">Cart</h1>
         <button
           onClick={toggleSelectionMode}
           className="p-2 text-cafe-primary hover:text-cafe-secondary hover:bg-cafe-primary/20 rounded-full transition-all duration-200 absolute right-0"
@@ -212,14 +212,14 @@ const Cart: React.FC<CartProps> = ({
                 )}
                 <div className="flex-1">
                   <div className="flex items-center justify-between mb-1">
-                    <h3 className="text-base font-medium text-cafe-text">{item.name}</h3>
-                    <p className="text-sm font-semibold text-cafe-text">₱{item.totalPrice} each</p>
+                    <h3 className="text-base font-medium text-white">{item.name}</h3>
+                    <p className="text-sm font-semibold text-white">₱{item.totalPrice} each</p>
                   </div>
                   {item.selectedVariation && (
-                    <p className="text-xs text-cafe-textMuted mb-1">Package: {item.selectedVariation.name}</p>
+                    <p className="text-xs text-gray-300 mb-1">Package: {item.selectedVariation.name}</p>
                   )}
                   {item.selectedAddOns && item.selectedAddOns.length > 0 && (
-                    <p className="text-xs text-cafe-textMuted mb-1">
+                    <p className="text-xs text-gray-300 mb-1">
                       Add-ons: {item.selectedAddOns.map(addOn => 
                         addOn.quantity && addOn.quantity > 1 
                           ? `${addOn.name} x${addOn.quantity}`
@@ -231,14 +231,14 @@ const Cart: React.FC<CartProps> = ({
               </div>
 
               <div className="mt-4 flex items-center justify-between flex-wrap gap-4" onClick={(e) => e.stopPropagation()}>
-                <div className="flex items-center space-x-2 glass rounded-full p-0.5 border border-cafe-primary/30">
+                <div className="flex items-center space-x-2 bg-white/5 border border-cafe-primary/30 rounded-full p-0.5 backdrop-blur-sm">
                   <button
                     onClick={() => updateQuantity(item.id, item.quantity - 1)}
                     className="p-1 hover:bg-cafe-primary/20 rounded-full transition-colors duration-200"
                   >
                     <Minus className="h-3 w-3 text-cafe-primary" />
                   </button>
-                  <span className="font-semibold text-cafe-text min-w-[24px] text-center text-sm">{item.quantity}</span>
+                  <span className="font-semibold text-white min-w-[24px] text-center text-sm">{item.quantity}</span>
                   <button
                     onClick={() => updateQuantity(item.id, item.quantity + 1)}
                     className="p-1 hover:bg-cafe-primary/20 rounded-full transition-colors duration-200"
@@ -248,7 +248,7 @@ const Cart: React.FC<CartProps> = ({
                 </div>
 
                 <div className="flex items-center ml-auto">
-                  <p className="text-sm font-semibold text-cafe-text">₱{item.totalPrice * item.quantity}</p>
+                  <p className="text-sm font-semibold text-cafe-primary">₱{item.totalPrice * item.quantity}</p>
                 </div>
               </div>
             </div>
@@ -256,8 +256,8 @@ const Cart: React.FC<CartProps> = ({
         </div>
       </div>
 
-      <div className="glass-card rounded-xl p-4 flex-shrink-0" style={{ paddingBottom: 'max(1.5rem, env(safe-area-inset-bottom))' }}>
-        <div className="flex items-center justify-between text-sm font-semibold text-cafe-text mb-4">
+      <div className="rounded-xl p-4 flex-shrink-0 bg-white/5 border border-cafe-primary/30 backdrop-blur-sm" style={{ paddingBottom: 'max(1.5rem, env(safe-area-inset-bottom))' }}>
+        <div className="flex items-center justify-between text-sm font-semibold text-white mb-4">
           <span>Total:</span>
           <span className="text-cafe-primary">₱{(getTotalPrice() || 0).toFixed(2)}</span>
         </div>
@@ -265,13 +265,13 @@ const Cart: React.FC<CartProps> = ({
         <div className="flex gap-3">
           <button
             onClick={onContinueShopping}
-            className="flex-1 text-cafe-primary py-2 rounded-xl border-2 border-cafe-primary hover:bg-cafe-primary/10 transition-all duration-200 transform hover:scale-[1.02] font-medium text-sm"
+            className="flex-1 py-2 rounded-xl border-2 border-cafe-primary bg-cafe-primary/10 text-cafe-primary hover:bg-cafe-primary/20 transition-all duration-200 font-medium text-sm"
           >
             Add More
           </button>
           <button
             onClick={onCheckout}
-            className="flex-1 text-white py-2 rounded-xl bg-cafe-primary hover:bg-cafe-secondary hover:opacity-90 transition-all duration-200 transform hover:scale-[1.02] font-medium text-sm"
+            className="flex-1 text-white py-2 rounded-xl bg-cafe-primary hover:bg-cafe-secondary hover:opacity-90 transition-all duration-200 font-medium text-sm"
           >
             Checkout
           </button>

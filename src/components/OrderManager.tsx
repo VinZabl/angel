@@ -492,6 +492,7 @@ const OrderManager: React.FC = () => {
                             src={item.image}
                             alt={item.name}
                             className="w-full h-full object-cover"
+                            loading="lazy"
                           />
                         ) : (
                           <div className="w-full h-full flex items-center justify-center">
@@ -571,6 +572,7 @@ const OrderManager: React.FC = () => {
                         src={selectedOrder.receipt_url}
                         alt="Receipt"
                         className="w-24 h-24 md:w-32 md:h-32 object-cover rounded-lg border border-gray-300 shadow-sm hover:opacity-80 transition-opacity cursor-pointer"
+                        loading="lazy"
                         onError={(e) => {
                           e.currentTarget.src = 'https://via.placeholder.com/300x300?text=Receipt+Not+Found';
                         }}

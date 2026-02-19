@@ -23,6 +23,7 @@ const PaymentMethodImage: React.FC<{ qrCodeUrl?: string; name: string }> = ({ qr
       src={qrCodeUrl}
       alt={`${name} QR Code`}
       className="w-full h-full rounded-lg object-cover"
+      loading="lazy"
       onError={() => setImageError(true)}
     />
   );

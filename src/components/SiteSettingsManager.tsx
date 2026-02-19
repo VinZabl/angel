@@ -344,6 +344,7 @@ const SiteSettingsManager: React.FC<SiteSettingsManagerProps> = ({ onSave }) => 
                   src={logoPreview}
                   alt="Site Logo"
                   className="w-full h-full object-cover"
+                  loading="lazy"
                 />
               ) : (
                 <div className="text-xs text-gray-400">☕</div>
@@ -584,6 +585,7 @@ const SiteSettingsManager: React.FC<SiteSettingsManagerProps> = ({ onSave }) => 
                       src={heroImages[imageKey]}
                       alt={`Hero ${index + 1}`}
                       className="w-full h-full object-cover"
+                      loading="lazy"
                     />
                     <button
                       type="button"

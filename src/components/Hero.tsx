@@ -74,20 +74,25 @@ const Hero: React.FC<HeroProps> = ({ images }) => {
             transform: `translateX(-${(currentIndex / validImages.length) * 100}%)`,
           }}
         >
-          {validImages.map((src, index) => (
-            <div
-              key={index}
-              className="flex-shrink-0 h-full"
-              style={{ width: `${100 / validImages.length}%` }}
-            >
-              <img
-                src={src}
-                alt={`Hero ${index + 1}`}
-                className="w-full h-full object-cover"
-                draggable={false}
-              />
-            </div>
-          ))}
+          {validImages.map((src, index) => {
+            const nextIndex = (currentIndex + 1) % validImages.length;
+            const shouldLoad = index === currentIndex || index === nextIndex;
+            return (
+              <div
+                key={index}
+                className="flex-shrink-0 h-full"
+                style={{ width: `${100 / validImages.length}%` }}
+              >
+                <img
+                  src={shouldLoad ? src : undefined}
+                  alt={`Hero ${index + 1}`}
+                  className="w-full h-full object-cover"
+                  draggable={false}
+                  loading={index === 0 ? 'eager' : 'lazy'}
+                />
+              </div>
+            );
+          })}
         </div>
 
         {/* Gradient overlay */}

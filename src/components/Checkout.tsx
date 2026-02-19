@@ -1391,12 +1391,12 @@ const Checkout: React.FC<CheckoutProps> = ({ cartItems, totalPrice, onBack, onNa
       <div className="flex items-center justify-center mb-8 relative">
         <button
           onClick={onBack}
-          className="flex items-center gap-1.5 text-cafe-textMuted hover:text-cafe-primary transition-colors duration-200 absolute left-0"
+          className="flex items-center gap-1.5 text-gray-300 hover:text-white transition-colors duration-200 absolute left-0"
         >
           <ArrowLeft className="h-5 w-5" />
           <span className="text-sm font-medium">Back</span>
         </button>
-        <h1 className="text-2xl font-semibold text-cafe-text">Top Up</h1>
+        <h1 className="text-2xl font-semibold text-white">Top Up</h1>
       </div>
 
         <div className="space-y-6">
@@ -1406,15 +1406,15 @@ const Checkout: React.FC<CheckoutProps> = ({ cartItems, totalPrice, onBack, onNa
               <div className="w-6 h-6 rounded-full bg-cafe-primary text-white flex items-center justify-center text-xs font-bold flex-shrink-0">
                 1
               </div>
-              <h2 className="text-sm font-medium text-cafe-text">Customer Information</h2>
+              <h2 className="text-sm font-medium text-white">Customer Information</h2>
             </div>
             
             <form className="space-y-6">
               {/* Bulk Input Section */}
               {itemsWithCustomFields.length >= 2 && (
-                <div className="mb-6 p-4 glass-strong border border-cafe-primary/30 rounded-lg">
-                  <h3 className="text-sm font-semibold text-cafe-text mb-4">Bulk Input</h3>
-                  <p className="text-sm text-cafe-textMuted mb-4">
+                <div className="mb-6 p-4 bg-white/5 border border-cafe-primary/30 rounded-lg backdrop-blur-sm">
+                  <h3 className="text-sm font-semibold text-white mb-4">Bulk Input</h3>
+                  <p className="text-sm text-gray-300 mb-4">
                     Select games and fill fields once for all selected games.
                   </p>
                   
@@ -1434,7 +1434,7 @@ const Checkout: React.FC<CheckoutProps> = ({ cartItems, totalPrice, onBack, onNa
                             onChange={(e) => handleBulkGameSelectionChange(item.id, e.target.checked)}
                             className="w-4 h-4 text-cafe-primary border-cafe-primary/30 rounded focus:ring-cafe-primary"
                           />
-                          <span className="text-sm text-cafe-text">{item.name}</span>
+                          <span className="text-sm text-white">{item.name}</span>
                         </label>
                       );
                     })}
@@ -1445,14 +1445,14 @@ const Checkout: React.FC<CheckoutProps> = ({ cartItems, totalPrice, onBack, onNa
                     <div className="space-y-4 mt-4 pt-4 border-t border-cafe-primary/20">
                       {bulkInputFields.map(({ index, field }) => (
                         <div key={index}>
-                          <label className="block text-sm font-medium text-cafe-text mb-2">
-                            {field ? field.label : `Field ${index + 1}`} <span className="text-cafe-textMuted">(Bulk)</span> {field?.required && <span className="text-red-500">*</span>}
+                          <label className="block text-sm font-medium text-white mb-2">
+                            {field ? field.label : `Field ${index + 1}`} <span className="text-gray-400">(Bulk)</span> {field?.required && <span className="text-red-500">*</span>}
                           </label>
                           <input
                             type="text"
                             value={bulkInputValues[index.toString()] || ''}
                             onChange={(e) => handleBulkInputChange(index.toString(), e.target.value)}
-                            className="w-full px-4 py-3 glass border border-cafe-primary/30 rounded-lg focus:ring-2 focus:ring-cafe-primary focus:border-cafe-primary transition-all duration-200 text-sm text-cafe-text placeholder-cafe-textMuted"
+                            className="w-full px-4 py-3 bg-white/5 border border-cafe-primary/30 rounded-lg focus:ring-2 focus:ring-cafe-primary focus:border-cafe-primary transition-all duration-200 text-sm text-white placeholder-gray-400 backdrop-blur-sm"
                             placeholder={field?.placeholder || field?.label || `Field ${index + 1}`}
                           />
                         </div>
@@ -1464,7 +1464,7 @@ const Checkout: React.FC<CheckoutProps> = ({ cartItems, totalPrice, onBack, onNa
 
               {/* Multiple Accounts Toggle */}
               {canUseMultipleAccounts && (
-                <div className="mb-6 p-4 glass-strong border border-cafe-primary/30 rounded-lg">
+                <div className="mb-6 p-4 bg-white/5 border border-cafe-primary/30 rounded-lg backdrop-blur-sm">
                   <label className="flex items-center gap-3 cursor-pointer">
                     <input
                       type="checkbox"
@@ -1473,8 +1473,8 @@ const Checkout: React.FC<CheckoutProps> = ({ cartItems, totalPrice, onBack, onNa
                       className="w-5 h-5 text-cafe-primary border-cafe-primary/30 rounded focus:ring-cafe-primary"
                     />
                     <div>
-                      <p className="text-sm font-medium text-cafe-text">Multiple Accounts</p>
-                      <p className="text-xs text-cafe-textMuted">Enable if you need separate account information for different packages of the same game</p>
+                      <p className="text-sm font-medium text-white">Multiple Accounts</p>
+                      <p className="text-xs text-gray-300">Enable if you need separate account information for different packages of the same game</p>
                     </div>
                   </label>
                 </div>
@@ -1498,6 +1498,7 @@ const Checkout: React.FC<CheckoutProps> = ({ cartItems, totalPrice, onBack, onNa
                                 src={firstItem.image}
                                 alt={gameName}
                                 className="w-full h-full object-cover"
+                                loading="lazy"
                                 onError={(e) => {
                                   e.currentTarget.style.display = 'none';
                                   e.currentTarget.nextElementSibling?.classList.remove('hidden');
@@ -1509,22 +1510,22 @@ const Checkout: React.FC<CheckoutProps> = ({ cartItems, totalPrice, onBack, onNa
                             </div>
                           </div>
                           <div>
-                            <h3 className="text-lg font-semibold text-cafe-text">{gameName}</h3>
-                            <p className="text-sm text-cafe-textMuted">{variationName}</p>
+                            <h3 className="text-lg font-semibold text-white">{gameName}</h3>
+                            <p className="text-sm text-gray-300">{variationName}</p>
                           </div>
                         </div>
                         {firstItem.customFields.map((field) => {
                           const valueKey = `${gameId}_${variationId}_${field.key}`;
                           return (
                             <div key={field.key}>
-                              <label className="block text-sm font-medium text-cafe-text mb-2">
+                              <label className="block text-sm font-medium text-white mb-2">
                                 {field.label} {field.required && <span className="text-red-500">*</span>}
                               </label>
                               <input
                                 type="text"
                                 value={customFieldValues[valueKey] || ''}
                                 onChange={(e) => setCustomFieldValues(prev => ({ ...prev, [valueKey]: e.target.value }))}
-                                className="w-full px-3 py-2 glass border border-cafe-primary/30 rounded-lg focus:ring-2 focus:ring-cafe-primary focus:border-cafe-primary transition-all duration-200 text-sm text-cafe-text placeholder-cafe-textMuted"
+                                className="w-full px-3 py-2 bg-white/5 border border-cafe-primary/30 rounded-lg focus:ring-2 focus:ring-cafe-primary focus:border-cafe-primary transition-all duration-200 text-sm text-white placeholder-gray-400 backdrop-blur-sm"
                                 placeholder={field.placeholder || field.label}
                                 required={field.required}
                               />
@@ -1546,6 +1547,7 @@ const Checkout: React.FC<CheckoutProps> = ({ cartItems, totalPrice, onBack, onNa
                               src={item.image}
                               alt={item.name}
                               className="w-full h-full object-cover"
+                              loading="lazy"
                               onError={(e) => {
                                 e.currentTarget.style.display = 'none';
                                 e.currentTarget.nextElementSibling?.classList.remove('hidden');
@@ -1559,8 +1561,8 @@ const Checkout: React.FC<CheckoutProps> = ({ cartItems, totalPrice, onBack, onNa
                         
                         {/* Game Title and Description */}
                         <div className="flex-1 min-w-0">
-                          <h3 className="text-lg font-semibold text-cafe-text">{item.name}</h3>
-                          <p className="text-sm text-cafe-textMuted">Please provide the following information for this game</p>
+                          <h3 className="text-lg font-semibold text-white">{item.name}</h3>
+                          <p className="text-sm text-gray-300">Please provide the following information for this game</p>
                         </div>
                       </div>
                       {item.customFields?.map((field) => {
@@ -1568,7 +1570,7 @@ const Checkout: React.FC<CheckoutProps> = ({ cartItems, totalPrice, onBack, onNa
                         const valueKey = `${originalId}_${field.key}`;
                         return (
                           <div key={valueKey}>
-                            <label className="block text-sm font-medium text-cafe-text mb-2">
+                            <label className="block text-sm font-medium text-white mb-2">
                               {field.label} {field.required && <span className="text-red-500">*</span>}
                             </label>
                             <input
@@ -1578,7 +1580,7 @@ const Checkout: React.FC<CheckoutProps> = ({ cartItems, totalPrice, onBack, onNa
                                 ...customFieldValues,
                                 [valueKey]: e.target.value
                               })}
-                              className="w-full px-3 py-2 glass border border-cafe-primary/30 rounded-lg focus:ring-2 focus:ring-cafe-primary focus:border-cafe-primary transition-all duration-200 text-sm text-cafe-text placeholder-cafe-textMuted"
+                              className="w-full px-3 py-2 bg-white/5 border border-cafe-primary/30 rounded-lg focus:ring-2 focus:ring-cafe-primary focus:border-cafe-primary transition-all duration-200 text-sm text-white placeholder-gray-400 backdrop-blur-sm"
                               placeholder={field.placeholder || field.label}
                               required={field.required}
                             />
@@ -1590,7 +1592,7 @@ const Checkout: React.FC<CheckoutProps> = ({ cartItems, totalPrice, onBack, onNa
                 )
               ) : (
                 <div>
-                  <label className="block text-sm font-medium text-cafe-text mb-2">
+                  <label className="block text-sm font-medium text-white mb-2">
                     IGN <span className="text-red-500">*</span>
                   </label>
                   <input
@@ -1600,7 +1602,7 @@ const Checkout: React.FC<CheckoutProps> = ({ cartItems, totalPrice, onBack, onNa
                       ...customFieldValues,
                       ['default_ign']: e.target.value
                     })}
-                    className="w-full px-3 py-2 glass border border-cafe-primary/30 rounded-lg focus:ring-2 focus:ring-cafe-primary focus:border-cafe-primary transition-all duration-200 text-sm text-cafe-text placeholder-cafe-textMuted"
+                    className="w-full px-3 py-2 bg-white/5 border border-cafe-primary/30 rounded-lg focus:ring-2 focus:ring-cafe-primary focus:border-cafe-primary transition-all duration-200 text-sm text-white placeholder-gray-400 backdrop-blur-sm"
                     placeholder="In game name"
                     required
                   />
@@ -1620,7 +1622,7 @@ const Checkout: React.FC<CheckoutProps> = ({ cartItems, totalPrice, onBack, onNa
             <div className="w-6 h-6 rounded-full bg-cafe-primary text-white flex items-center justify-center text-xs font-bold flex-shrink-0">
               2
             </div>
-            <h2 className="text-sm font-medium text-cafe-text">Choose Payment Method</h2>
+            <h2 className="text-sm font-medium text-white">Choose Payment Method</h2>
           </div>
           
           <div className="grid grid-cols-6 gap-1 md:gap-2 mb-6">
@@ -1645,7 +1647,7 @@ const Checkout: React.FC<CheckoutProps> = ({ cartItems, totalPrice, onBack, onNa
                 className={`rounded-lg border-2 transition-all duration-200 flex flex-col overflow-hidden ${
                   paymentMethod?.id === method.id
                     ? 'border-transparent bg-cafe-primary'
-                    : 'glass border-cafe-primary/30 hover:border-cafe-primary hover:glass-strong'
+                    : 'bg-white/5 border-cafe-primary/30 hover:border-cafe-primary hover:bg-white/10 backdrop-blur-sm'
                 }`}
               >
                 {/* Icon fills the card */}
@@ -1655,6 +1657,7 @@ const Checkout: React.FC<CheckoutProps> = ({ cartItems, totalPrice, onBack, onNa
                       src={method.icon_url}
                       alt={method.name}
                       className="w-full h-full object-cover"
+                      loading="lazy"
                     />
                   ) : (
                     <div className="w-full h-full flex items-center justify-center">
@@ -1669,9 +1672,9 @@ const Checkout: React.FC<CheckoutProps> = ({ cartItems, totalPrice, onBack, onNa
 
           {/* Receipt Upload (place_order only) or Please Read (order_via_messenger) */}
           {orderOption === 'order_via_messenger' ? (
-            <div className="mb-6 p-4 glass-strong border border-cafe-primary/25 rounded-xl">
-              <p className="text-sm font-semibold text-cafe-text mb-1">Please read</p>
-              <p className="text-sm text-cafe-textMuted">
+            <div className="mb-6 p-4 bg-white/5 border border-cafe-primary/30 rounded-xl backdrop-blur-sm">
+              <p className="text-sm font-semibold text-white mb-1">Please read</p>
+              <p className="text-sm text-gray-300">
                 Pay using any of the methods above → screenshot the receipt → then send to our Messenger after submitting your order.
               </p>
             </div>
@@ -1681,13 +1684,13 @@ const Checkout: React.FC<CheckoutProps> = ({ cartItems, totalPrice, onBack, onNa
                 <div className="w-6 h-6 rounded-full bg-cafe-primary text-white flex items-center justify-center text-xs font-bold flex-shrink-0">
                   3
                 </div>
-                <label className="text-sm font-medium text-cafe-text">
+                <label className="text-sm font-medium text-white">
                   Payment Receipt <span className="text-red-400">*</span>
                 </label>
               </div>
               
               {!receiptPreview ? (
-                <div className="relative glass border-2 border-dashed border-cafe-primary/30 rounded-lg p-6 text-center hover:border-cafe-primary transition-colors duration-200">
+                <div className="relative bg-white/5 border-2 border-dashed border-cafe-primary/30 rounded-lg p-6 text-center hover:border-cafe-primary transition-colors duration-200 backdrop-blur-sm">
                   <input
                     type="file"
                     accept="image/jpeg,image/png,image/webp,image/gif"
@@ -1708,41 +1711,42 @@ const Checkout: React.FC<CheckoutProps> = ({ cartItems, totalPrice, onBack, onNa
                     {uploadingReceipt ? (
                       <>
                         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-cafe-primary"></div>
-                        <span className="text-sm text-cafe-textMuted">Uploading...</span>
+                        <span className="text-sm text-gray-300">Uploading...</span>
                       </>
                     ) : (
                       <>
                         <Upload className="h-8 w-8 text-cafe-primary" />
-                        <span className="text-sm text-cafe-text">Click to upload receipt</span>
-                        <span className="text-xs text-cafe-textMuted">JPEG, PNG, WebP, or GIF (Max 5MB)</span>
+                        <span className="text-sm text-white">Click to upload receipt</span>
+                        <span className="text-xs text-gray-400">JPEG, PNG, WebP, or GIF (Max 5MB)</span>
                       </>
                     )}
                   </label>
                 </div>
               ) : (
-                <div className="relative glass border border-cafe-primary/30 rounded-lg p-4">
+                <div className="relative bg-white/5 border border-cafe-primary/30 rounded-lg p-4 backdrop-blur-sm">
                   <div className="flex items-center space-x-4">
                     <div className="flex-shrink-0">
                       <img
                         src={receiptPreview}
                         alt="Receipt preview"
                         className="w-20 h-20 object-cover rounded-lg border border-cafe-primary/30"
+                        loading="lazy"
                       />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium text-cafe-text truncate">
+                      <p className="text-sm font-medium text-white truncate">
                         {receiptFile?.name || 'Receipt uploaded'}
                       </p>
-                      <p className="text-xs text-cafe-textMuted">
+                      <p className="text-xs text-gray-300">
                         {receiptImageUrl ? '✓ Uploaded successfully' : 'Uploading...'}
                       </p>
                     </div>
                     <button
                       onClick={handleReceiptRemove}
-                      className="flex-shrink-0 p-2 glass-strong rounded-lg hover:bg-red-500/20 transition-colors duration-200"
+                      className="flex-shrink-0 p-2 bg-white/10 rounded-lg hover:bg-red-500/20 transition-colors duration-200 border border-cafe-primary/30"
                       disabled={uploadingReceipt}
                     >
-                      <X className="h-4 w-4 text-cafe-text" />
+                      <X className="h-4 w-4 text-white" />
                     </button>
                   </div>
                 </div>
@@ -1752,7 +1756,7 @@ const Checkout: React.FC<CheckoutProps> = ({ cartItems, totalPrice, onBack, onNa
                 <p className="mt-2 text-sm text-red-400">{receiptError}</p>
               )}
 
-              <p className="text-xs text-cafe-textMuted text-center mt-3">
+              <p className="text-xs text-gray-400 text-center mt-3">
                 Please upload a screenshot of your payment receipt. This helps us verify and process your order quickly.
               </p>
             </div>
@@ -1773,8 +1777,8 @@ const Checkout: React.FC<CheckoutProps> = ({ cartItems, totalPrice, onBack, onNa
                 disabled={!paymentMethod}
                 className={`relative w-full py-3 rounded-xl font-medium transition-all duration-200 transform mb-3 flex items-center justify-center space-x-2 ${
                   paymentMethod
-                    ? 'glass border border-cafe-primary/30 text-cafe-text hover:border-cafe-primary hover:glass-strong'
-                    : 'glass border border-cafe-primary/20 text-cafe-textMuted cursor-not-allowed'
+                    ? 'bg-white/5 border border-cafe-primary/30 text-white hover:border-cafe-primary hover:bg-white/10 backdrop-blur-sm'
+                    : 'bg-white/5 border border-cafe-primary/20 text-gray-400 cursor-not-allowed backdrop-blur-sm'
                 }`}
               >
                 <div className={`absolute top-2 left-2 w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold ${
@@ -1802,7 +1806,7 @@ const Checkout: React.FC<CheckoutProps> = ({ cartItems, totalPrice, onBack, onNa
                 className={`relative w-full py-4 rounded-xl font-medium text-lg transition-all duration-200 transform ${
                   paymentMethod && hasCopiedMessage
                     ? 'text-white bg-cafe-primary hover:bg-cafe-secondary hover:opacity-90 hover:scale-[1.02]'
-                    : 'glass text-cafe-textMuted cursor-not-allowed'
+                    : 'bg-white/5 border border-cafe-primary/20 text-gray-400 cursor-not-allowed backdrop-blur-sm'
                 }`}
               >
                 <div className={`absolute top-2 left-2 w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold ${
@@ -1813,7 +1817,7 @@ const Checkout: React.FC<CheckoutProps> = ({ cartItems, totalPrice, onBack, onNa
                 SUBMIT ORDER
               </button>
               
-              <p className="text-xs text-cafe-textMuted text-center mt-3">
+              <p className="text-xs text-gray-400 text-center mt-3">
                 You'll be redirected to Facebook Messenger. Send your receipt screenshot there after submitting your order.
               </p>
             </>
@@ -1826,7 +1830,7 @@ const Checkout: React.FC<CheckoutProps> = ({ cartItems, totalPrice, onBack, onNa
                 className={`relative w-full py-4 rounded-xl font-medium text-lg transition-all duration-200 transform ${
                   paymentMethod && receiptImageUrl && !uploadingReceipt && !isPlacingOrder
                     ? 'text-white bg-cafe-primary hover:bg-cafe-secondary hover:opacity-90 hover:scale-[1.02]'
-                    : 'glass text-cafe-textMuted cursor-not-allowed'
+                    : 'bg-white/5 border border-cafe-primary/20 text-gray-400 cursor-not-allowed backdrop-blur-sm'
                 }`}
               >
                 <div className={`absolute top-2 left-2 w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold ${
@@ -1846,18 +1850,18 @@ const Checkout: React.FC<CheckoutProps> = ({ cartItems, totalPrice, onBack, onNa
       {/* Payment Details Modal */}
       {showPaymentDetailsModal && selectedPaymentMethod && (
         <div className="modal-overlay fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-          <div className="glass-card rounded-xl p-6 max-w-md w-full max-h-[90vh] overflow-y-auto">
+          <div className="rounded-xl p-6 max-w-md w-full max-h-[90vh] overflow-y-auto bg-white/5 border border-cafe-primary/30 backdrop-blur-sm">
             <div className="flex items-center justify-between mb-6">
-              <h3 className="text-2xl font-semibold text-cafe-text">Payment Details</h3>
+              <h3 className="text-2xl font-semibold text-white">Payment Details</h3>
               <button
                 onClick={() => setShowPaymentDetailsModal(false)}
-                className="p-2 glass-strong rounded-lg hover:bg-cafe-primary/20 transition-colors duration-200"
+                className="p-2 bg-white/10 rounded-lg hover:bg-cafe-primary/20 transition-colors duration-200 border border-cafe-primary/30"
               >
-                <X className="h-5 w-5 text-cafe-text" />
+                <X className="h-5 w-5 text-white" />
               </button>
             </div>
 
-            <p className="text-xs text-cafe-textMuted mb-6">
+            <p className="text-xs text-gray-300 mb-6">
               {orderOption === 'order_via_messenger'
                 ? 'Pay using any of the methods above → screenshot the receipt → then send to our Messenger after submitting your order.'
                 : 'Press the copy button to copy the number or download the QR code, make a payment, then proceed to upload your receipt.'}
@@ -1866,7 +1870,7 @@ const Checkout: React.FC<CheckoutProps> = ({ cartItems, totalPrice, onBack, onNa
             <div className="space-y-4">
               {/* Payment Method Name and Amount */}
               <div className="flex items-center justify-between">
-                <p className="text-lg font-semibold text-cafe-text">{selectedPaymentMethod.name}</p>
+                <p className="text-lg font-semibold text-white">{selectedPaymentMethod.name}</p>
                 <p className="text-xl font-semibold text-cafe-primary">₱{totalPrice}</p>
               </div>
               
@@ -1875,45 +1879,45 @@ const Checkout: React.FC<CheckoutProps> = ({ cartItems, totalPrice, onBack, onNa
                 {/* Account Number with Copy Button */}
                 <div>
                   <div className="flex items-center gap-2 mb-1">
-                    <p className="text-sm text-cafe-textMuted">Number:</p>
+                    <p className="text-sm text-gray-300">Number:</p>
                     <button
                       onClick={() => handleCopyAccountNumber(selectedPaymentMethod.account_number)}
-                      className="p-1.5 glass-strong rounded-lg hover:bg-cafe-primary/20 transition-colors duration-200 flex-shrink-0"
+                      className="p-1.5 bg-white/10 rounded-lg hover:bg-cafe-primary/20 transition-colors duration-200 flex-shrink-0 border border-cafe-primary/30"
                       title="Copy account number"
                     >
                       {copiedAccountNumber ? (
                         <Check className="h-3.5 w-3.5 text-green-400" />
                       ) : (
-                        <Copy className="h-3.5 w-3.5 text-cafe-text" />
+                        <Copy className="h-3.5 w-3.5 text-white" />
                       )}
                     </button>
                   </div>
-                  <p className="font-mono text-cafe-text font-medium text-sm">{selectedPaymentMethod.account_number}</p>
+                  <p className="font-mono text-white font-medium text-sm">{selectedPaymentMethod.account_number}</p>
                 </div>
                 
                 {/* Account Name with Copy Button */}
                 <div>
                   <div className="flex items-center gap-2 mb-1">
-                    <p className="text-sm text-cafe-textMuted">Name:</p>
+                    <p className="text-sm text-gray-300">Name:</p>
                     <button
                       onClick={() => handleCopyAccountName(selectedPaymentMethod.account_name)}
-                      className="p-1.5 glass-strong rounded-lg hover:bg-cafe-primary/20 transition-colors duration-200 flex-shrink-0"
+                      className="p-1.5 bg-white/10 rounded-lg hover:bg-cafe-primary/20 transition-colors duration-200 flex-shrink-0 border border-cafe-primary/30"
                       title="Copy account name"
                     >
                       {copiedAccountName ? (
                         <Check className="h-3.5 w-3.5 text-green-400" />
                       ) : (
-                        <Copy className="h-3.5 w-3.5 text-cafe-text" />
+                        <Copy className="h-3.5 w-3.5 text-white" />
                       )}
                     </button>
                   </div>
-                  <p className="text-cafe-text font-medium text-sm">{selectedPaymentMethod.account_name}</p>
+                  <p className="text-white font-medium text-sm">{selectedPaymentMethod.account_name}</p>
                 </div>
               </div>
               
               {/* Other Option */}
               <div>
-                <h3 className="font-medium text-cafe-text text-center">Other Option</h3>
+                <h3 className="font-medium text-white text-center">Other Option</h3>
               </div>
               
               {/* Download QR Button and QR Image */}
@@ -1922,7 +1926,7 @@ const Checkout: React.FC<CheckoutProps> = ({ cartItems, totalPrice, onBack, onNa
                 {!isMessengerBrowser && (
                   <button
                     onClick={() => handleDownloadQRCode(selectedPaymentMethod.qr_code_url, selectedPaymentMethod.name)}
-                    className="px-3 py-1.5 glass-strong rounded-lg hover:bg-cafe-primary/20 transition-colors duration-200 text-sm font-medium text-cafe-text flex items-center gap-2"
+                    className="px-3 py-1.5 bg-white/10 rounded-lg hover:bg-cafe-primary/20 transition-colors duration-200 text-sm font-medium text-white flex items-center gap-2 border border-cafe-primary/30"
                     title="Download QR code"
                   >
                     <Download className="h-4 w-4" />
@@ -1930,12 +1934,13 @@ const Checkout: React.FC<CheckoutProps> = ({ cartItems, totalPrice, onBack, onNa
                   </button>
                 )}
                 {isMessengerBrowser && (
-                  <p className="text-xs text-cafe-textMuted text-center">Long-press the QR code to save</p>
+                  <p className="text-xs text-gray-400 text-center">Long-press the QR code to save</p>
                 )}
                 <img 
                   src={selectedPaymentMethod.qr_code_url} 
                   alt={`${selectedPaymentMethod.name} QR Code`}
                   className="w-32 h-32 rounded-lg border-2 border-cafe-primary/30 shadow-sm"
+                  loading="lazy"
                   onError={(e) => {
                     e.currentTarget.src = 'https://images.pexels.com/photos/8867482/pexels-photo-8867482.jpeg?auto=compress&cs=tinysrgb&w=300&h=300&fit=crop';
                   }}
@@ -1944,7 +1949,7 @@ const Checkout: React.FC<CheckoutProps> = ({ cartItems, totalPrice, onBack, onNa
               ) : (
                 <div className="flex flex-col items-center gap-3">
                   <div className="w-32 h-32 rounded-lg border-2 border-cafe-primary/30 shadow-sm bg-cafe-darkCard flex items-center justify-center">
-                    <p className="text-xs text-cafe-textMuted text-center">No QR Code Available</p>
+                    <p className="text-xs text-gray-400 text-center">No QR Code Available</p>
                   </div>
                 </div>
               )}
