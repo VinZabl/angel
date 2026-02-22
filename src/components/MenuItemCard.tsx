@@ -208,7 +208,7 @@ const MenuItemCard: React.FC<MenuItemCardProps> = ({
             )}
           </h4>
           {item.subtitle ? (
-            <p className="text-[7px] sm:text-[8px] text-white/80 text-center mt-0.5 line-clamp-2 w-full font-sans">
+            <p className="text-[7px] sm:text-[8px] text-white/80 text-center mt-0.5 w-full font-sans whitespace-normal break-words">
               {item.subtitle}
             </p>
           ) : null}
@@ -360,7 +360,7 @@ const MenuItemCard: React.FC<MenuItemCardProps> = ({
                                         {variation.name}
                                       </div>
                                       {variation.description && (
-                                        <div className="text-xs text-cafe-textMuted mb-2 line-clamp-2">
+                                        <div className="text-xs text-cafe-textMuted mb-2 whitespace-normal break-words">
                                           {variation.description}
                                         </div>
                                       )}
