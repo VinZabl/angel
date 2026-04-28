@@ -151,8 +151,28 @@ const AdminDashboard: React.FC = () => {
   };
 
   const handleEditItem = (item: MenuItem) => {
-    setEditingItem(item);
-    setFormData(item);
+    // Fix duplicate or empty keys in custom fields for backward compatibility
+    const fixedItem = { ...item };
+    if (fixedItem.customFields && fixedItem.customFields.length > 0) {
+      const usedKeys = new Set<string>();
+      fixedItem.customFields = fixedItem.customFields.map((field, index) => {
+        let key = field.key;
+        if (!key) {
+          key = field.label ? field.label.toLowerCase().replace(/\s+/g, '_') : `field_${index}`;
+        }
+        let finalKey = key;
+        let counter = 1;
+        while (usedKeys.has(finalKey)) {
+          finalKey = `${key}_${counter}`;
+          counter++;
+        }
+        usedKeys.add(finalKey);
+        return { ...field, key: finalKey };
+      });
+    }
+
+    setEditingItem(fixedItem);
+    setFormData(fixedItem);
     // Restore discount values from localStorage if they exist
     const savedDiscounts = localStorage.getItem(`amber_discounts_${item.id}`);
     if (savedDiscounts) {
@@ -406,7 +426,7 @@ const AdminDashboard: React.FC = () => {
   const addCustomField = () => {
     const newField: CustomField = {
       label: '',
-      key: '',
+      key: `field_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`,
       required: false,
       placeholder: ''
     };
@@ -419,9 +439,18 @@ const AdminDashboard: React.FC = () => {
   const updateCustomField = (index: number, field: keyof CustomField, value: string | boolean) => {
     const updatedFields = [...(formData.customFields || [])];
     updatedFields[index] = { ...updatedFields[index], [field]: value };
-    // Auto-generate key from label if key is empty
-    if (field === 'label' && !updatedFields[index].key) {
-      updatedFields[index].key = value.toString().toLowerCase().replace(/\s+/g, '_');
+    // Auto-generate unique key from label
+    if (field === 'label') {
+      let baseKey = value.toString().toLowerCase().replace(/\s+/g, '_');
+      if (!baseKey) baseKey = `field_${Date.now()}`;
+      
+      let finalKey = baseKey;
+      let counter = 1;
+      while (updatedFields.some((f, i) => i !== index && f.key === finalKey)) {
+        finalKey = `${baseKey}_${counter}`;
+        counter++;
+      }
+      updatedFields[index].key = finalKey;
     }
     setFormData({ ...formData, customFields: updatedFields });
   };

@@ -309,7 +309,7 @@ const Checkout: React.FC<CheckoutProps> = ({ cartItems, totalPrice, onBack, onNa
         if (item.customFields && item.customFields[fieldIndex]) {
           const field = item.customFields[fieldIndex];
           const originalId = getOriginalMenuItemId(item.id);
-          const valueKey = `${originalId}_${field.key}`;
+          const valueKey = `${originalId}_${field.key}_${fieldIndex}`;
           updates[valueKey] = value;
         }
       });
@@ -569,8 +569,8 @@ const Checkout: React.FC<CheckoutProps> = ({ cartItems, totalPrice, onBack, onNa
         const firstItem = items[0];
         if (!firstItem.customFields) return;
         
-        const fields = firstItem.customFields.map(field => {
-          const valueKey = `${gameId}_${variationId}_${field.key}`;
+        const fields = firstItem.customFields.map((field, index) => {
+          const valueKey = `${gameId}_${variationId}_${field.key}_${index}`;
           const value = customFieldValues[valueKey] || '';
           return value ? { label: field.label, value } : null;
         }).filter(Boolean) as Array<{ label: string, value: string }>;
@@ -637,8 +637,8 @@ const Checkout: React.FC<CheckoutProps> = ({ cartItems, totalPrice, onBack, onNa
           return;
         }
         
-        const fields = item.customFields.map(field => {
-          const valueKey = `${originalId}_${field.key}`;
+        const fields = item.customFields.map((field, index) => {
+          const valueKey = `${originalId}_${field.key}_${index}`;
           const value = customFieldValues[valueKey] || '';
           return value ? { label: field.label, value } : null;
         }).filter(Boolean) as Array<{ label: string, value: string }> || [];
@@ -884,8 +884,8 @@ const Checkout: React.FC<CheckoutProps> = ({ cartItems, totalPrice, onBack, onNa
         const firstItem = items[0];
         if (!firstItem.customFields) return;
         
-        const fields = firstItem.customFields.map(field => {
-          const valueKey = `${gameId}_${variationId}_${field.key}`;
+        const fields = firstItem.customFields.map((field, index) => {
+          const valueKey = `${gameId}_${variationId}_${field.key}_${index}`;
           const value = customFieldValues[valueKey] || '';
           return value ? { label: field.label, value } : null;
         }).filter(Boolean) as Array<{ label: string, value: string }>;
@@ -952,8 +952,8 @@ const Checkout: React.FC<CheckoutProps> = ({ cartItems, totalPrice, onBack, onNa
           return;
         }
         
-        const fields = item.customFields.map(field => {
-          const valueKey = `${originalId}_${field.key}`;
+        const fields = item.customFields.map((field, index) => {
+          const valueKey = `${originalId}_${field.key}_${index}`;
           const value = customFieldValues[valueKey] || '';
           return value ? { label: field.label, value } : null;
         }).filter(Boolean) as Array<{ label: string, value: string }> || [];
@@ -1247,8 +1247,8 @@ const Checkout: React.FC<CheckoutProps> = ({ cartItems, totalPrice, onBack, onNa
         if (!firstItem.customFields) return;
         
         const fields: Record<string, string> = {};
-        firstItem.customFields.forEach(field => {
-          const valueKey = `${gameId}_${variationId}_${field.key}`;
+        firstItem.customFields.forEach((field, index) => {
+          const valueKey = `${gameId}_${variationId}_${field.key}_${index}`;
           const value = customFieldValues[valueKey];
           if (value) {
             fields[field.label] = value;
@@ -1278,8 +1278,8 @@ const Checkout: React.FC<CheckoutProps> = ({ cartItems, totalPrice, onBack, onNa
       if (hasAnyCustomFields) {
         itemsWithCustomFields.forEach((item) => {
           const originalId = getOriginalMenuItemId(item.id);
-          item.customFields?.forEach(field => {
-            const valueKey = `${originalId}_${field.key}`;
+          item.customFields?.forEach((field, index) => {
+            const valueKey = `${originalId}_${field.key}_${index}`;
             const value = customFieldValues[valueKey];
             if (value) {
               singleAccountInfo[field.label] = value;
@@ -1366,9 +1366,9 @@ const Checkout: React.FC<CheckoutProps> = ({ cartItems, totalPrice, onBack, onNa
         const firstItem = items[0];
         if (!firstItem.customFields) return true;
         
-        return firstItem.customFields.every(field => {
+        return firstItem.customFields.every((field, index) => {
           if (!field.required) return true;
-          const valueKey = `${gameId}_${variationId}_${field.key}`;
+          const valueKey = `${gameId}_${variationId}_${field.key}_${index}`;
           return customFieldValues[valueKey]?.trim() || false;
         });
       });
@@ -1378,9 +1378,9 @@ const Checkout: React.FC<CheckoutProps> = ({ cartItems, totalPrice, onBack, onNa
     return itemsWithCustomFields.every(item => {
       if (!item.customFields) return true;
       const originalId = getOriginalMenuItemId(item.id);
-      return item.customFields.every(field => {
+      return item.customFields.every((field, index) => {
         if (!field.required) return true;
-        const valueKey = `${originalId}_${field.key}`;
+        const valueKey = `${originalId}_${field.key}_${index}`;
         return customFieldValues[valueKey]?.trim() || false;
       });
     });
@@ -1514,10 +1514,10 @@ const Checkout: React.FC<CheckoutProps> = ({ cartItems, totalPrice, onBack, onNa
                             <p className="text-sm text-gray-300">{variationName}</p>
                           </div>
                         </div>
-                        {firstItem.customFields.map((field) => {
-                          const valueKey = `${gameId}_${variationId}_${field.key}`;
+                        {firstItem.customFields.map((field, index) => {
+                          const valueKey = `${gameId}_${variationId}_${field.key}_${index}`;
                           return (
-                            <div key={field.key}>
+                            <div key={valueKey}>
                               <label className="block text-sm font-medium text-white mb-2">
                                 {field.label} {field.required && <span className="text-red-500">*</span>}
                               </label>
@@ -1565,9 +1565,9 @@ const Checkout: React.FC<CheckoutProps> = ({ cartItems, totalPrice, onBack, onNa
                           <p className="text-sm text-gray-300">Please provide the following information for this game</p>
                         </div>
                       </div>
-                      {item.customFields?.map((field) => {
+                      {item.customFields?.map((field, index) => {
                         const originalId = getOriginalMenuItemId(item.id);
-                        const valueKey = `${originalId}_${field.key}`;
+                        const valueKey = `${originalId}_${field.key}_${index}`;
                         return (
                           <div key={valueKey}>
                             <label className="block text-sm font-medium text-white mb-2">
